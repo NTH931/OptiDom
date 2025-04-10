@@ -9,13 +9,9 @@ type WritableCSSProperties = Pick<CSSStyleDeclaration, WritableKeys<CSSStyleDecl
 type RegularKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'f1' | 'f2' | 'f3' | 'f4' | 'f5' | 'f6' | 'f7' | 'f8' | 'f9' | 'f10' | 'f11' | 'f12' | 'escape' | 'enter' | 'tab' | 'backspace' | 'delete' | 'insert' | 'home' | 'end' | 'pageup' | 'pagedown' | 'arrowup' | 'arrowdown' | 'arrowleft' | 'arrowright' | 'space' | 'plus' | 'minus' | 'equal' | 'bracketleft' | 'bracketright' | 'backslash' | 'semicolon' | 'quote' | 'comma' | 'period' | 'slash';
 type Shortcut = `${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${ModifierKey}+${RegularKey}`
 
-type FetchOptions = Omit<RequestInit, 'body'> & {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  headers?: HeadersInit;
-  body?: Record<string, any> | FormData | string | Blob;
-  json?: boolean;
-};
-
+/**
+ * @deprecated
+ */
 interface HTMLElementCascade {
   element: keyof HTMLElementTagNameMap;
   id?: string;
@@ -95,6 +91,7 @@ interface HTMLElement {
   /**
    * Creates children of the element
    * @param elements The elements to use, specified by the cascade. The cascade is a {@link HTMLElementCascade}
+   * @deprecated use {@link document.elementCreator} or new {@link HTMLElementCreator}
    */
   createChildren(elements: HTMLElementCascade): void;
 
