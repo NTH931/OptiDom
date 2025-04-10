@@ -91,10 +91,10 @@ const addEventListenersSource = function <K extends keyof HTMLElementEventMap>(
 
 const cssSource = function(
   this: HTMLElement,
-  key: keyof WritableCSSProperties | Partial<Record<keyof WritableCSSProperties, string>>,
+  key: string | Partial<StringRecord<string>>,
   value?: string
 ): void { 
-  const css = this.style as WritableCSSProperties;
+  const css = this.style;
 
   if (typeof key === "string") {
     if (key in css && value !== undefined) {
@@ -141,7 +141,7 @@ const documentCssSource = function (
   }
 
   // Convert camelCase to kebab-case
-  const newStyles: Record<string, string> = {};
+  const newStyles: StringRecord<string> = {};
   for (const [prop, val] of Object.entries(object)) {
     if (val !== null && val !==  undefined) {
       const kebab = prop.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
@@ -150,7 +150,7 @@ const documentCssSource = function (
   }
 
   let ruleIndex = -1;
-  const existingStyles: Record<string, string> = {};
+  const existingStyles: StringRecord<string> = {};
 
   for (let i = 0; i < sheet.cssRules.length; i++) {
     const rule = sheet.cssRules[i];

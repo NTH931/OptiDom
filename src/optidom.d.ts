@@ -1,13 +1,8 @@
 type ErrorType = (new (message: string) => Error & { name: string });
 type ModifierKey = 'ctrl' | 'alt' | 'shift' | 'meta' | 'control' | 'windows' | 'command' | 'search';
-type WritableKeys<T> = {
-  [K in keyof T]: T[K] extends (...args: any) => any ? never  // Exclude methods
-  : T[K] extends Readonly<any> ? never        // Exclude readonly properties
-  : K;
-}[keyof T];
-type WritableCSSProperties = Pick<CSSStyleDeclaration, WritableKeys<CSSStyleDeclaration>>;
 type RegularKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'f1' | 'f2' | 'f3' | 'f4' | 'f5' | 'f6' | 'f7' | 'f8' | 'f9' | 'f10' | 'f11' | 'f12' | 'escape' | 'enter' | 'tab' | 'backspace' | 'delete' | 'insert' | 'home' | 'end' | 'pageup' | 'pagedown' | 'arrowup' | 'arrowdown' | 'arrowleft' | 'arrowright' | 'space' | 'plus' | 'minus' | 'equal' | 'bracketleft' | 'bracketright' | 'backslash' | 'semicolon' | 'quote' | 'comma' | 'period' | 'slash';
 type Shortcut = `${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${ModifierKey}+${RegularKey}`
+type StringRecord<T> = Record<string, T>;
 
 /**
  * @deprecated
@@ -63,10 +58,10 @@ interface HTMLElement {
 
   //? New
   /** Adds inline css to the element */
-  css(key: Partial<Record<keyof WritableCSSProperties, string>>): void;
+  css(key: Partial<StringRecord<string>>): void;
 
   /** Adds inline css to the element */
-  css(key: keyof WritableCSSProperties, value: string): void;
+  css(key: string, value: string): void;
 
   /** 
    * Gets the element's parent 
