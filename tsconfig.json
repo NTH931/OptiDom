@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "src/",
+    "outDir": "dist/",
+    "types": ["./src/optidom.d.ts"],
+    "lib": ["DOM", "ES2020", "ESNext"]
+  },
+  "include": [
+    "src/**/*",        // Include your source files
+    "optidom.d.ts"      // Explicitly include global.d.ts
+  ]
+}
