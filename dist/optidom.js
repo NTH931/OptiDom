@@ -320,9 +320,17 @@ class HTMLElementCreator {
     currContainer;
     parentStack = [];
     constructor(tag, attrs = {}) {
-        this.superEl = document.createElement(tag);
-        this.makeElement(this.superEl, attrs);
-        this.currContainer = this.superEl;
+        // If the tag is an HTMLElement, use it directly
+        if (tag instanceof HTMLElement) {
+            this.superEl = tag;
+            this.currContainer = tag;
+        }
+        else {
+            // Otherwise, create a new element using the tag name
+            this.superEl = document.createElement(tag);
+            this.makeElement(this.superEl, attrs);
+            this.currContainer = this.superEl;
+        }
     }
     makeElement(el, attrs) {
         Object.entries(attrs).forEach(([key, value]) => {
@@ -614,6 +622,9 @@ HTMLElement.prototype.getParent = getParentSource;
 HTMLElement.prototype.getAncestor = getAncestorSource;
 HTMLElement.prototype.getAncestorQuery = getAncestorQuerySource;
 HTMLElement.prototype.createChildren = createChildrenSource;
+HTMLElement.prototype.elementCreator = function () {
+    return new HTMLElementCreator(this);
+};
 HTMLElement.prototype.change = changeSource;
 HTMLElement.prototype.html = htmlSource;
 HTMLElement.prototype.text = textSource;

@@ -405,10 +405,17 @@ class HTMLElementCreator {
   private currContainer: HTMLElement;
   private parentStack: HTMLElement[] = [];
 
-  constructor(tag: keyof HTMLElementTagNameMap, attrs: HTMLAttrs = {}) {
-    this.superEl = document.createElement(tag as string);
-    this.makeElement(this.superEl, attrs);
-    this.currContainer = this.superEl;
+  constructor(tag: HTMLElement | keyof HTMLElementTagNameMap, attrs: HTMLAttrs = {}) {
+    // If the tag is an HTMLElement, use it directly
+    if (tag instanceof HTMLElement) {
+      this.superEl = tag;
+      this.currContainer = tag;
+    } else {
+      // Otherwise, create a new element using the tag name
+      this.superEl = document.createElement(tag) as HTMLElement;
+      this.makeElement(this.superEl, attrs);
+      this.currContainer = this.superEl;
+    }
   }
 
   private makeElement(el: HTMLElement, attrs: HTMLAttrs) {
@@ -720,7 +727,10 @@ declare global {
    */
   function bindShortcut(shortcut: Shortcut, callback: (event: KeyboardEvent) => void): void;
 
-  /** Creates an iife (Immediately invoked function expression) that triggers on run */
+  /** 
+   * Creates an iife (Immediately invoked function expression) that triggers on run 
+   * @param iife The function to run the code in for the iife
+   */
   function f(iife: () => void): void;
 
   var Cookie: typeof CookieInternal;
@@ -760,6 +770,9 @@ HTMLElement.prototype.getParent = getParentSource;
 HTMLElement.prototype.getAncestor = getAncestorSource;
 HTMLElement.prototype.getAncestorQuery = getAncestorQuerySource;
 HTMLElement.prototype.createChildren = createChildrenSource;
+HTMLElement.prototype.elementCreator = function (this: HTMLElement) { 
+  return new HTMLElementCreator(this);
+};
 HTMLElement.prototype.change = changeSource;
 HTMLElement.prototype.html = htmlSource;
 HTMLElement.prototype.text = textSource;

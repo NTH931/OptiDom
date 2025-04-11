@@ -91,6 +91,11 @@ interface HTMLElement {
   createChildren(elements: HTMLElementCascade): void;
 
   /**
+   * Starts up the element creator
+   */
+  elementCreator(this: HTMLElement): HTMLElementCreator;
+
+  /**
    * Changing an elements tag name
    * @warning BE CAREFUL WITH THIS FUNCTION, AS IT MODIFIES TAG NAMES, WHICH ARE A MAJOR PART OF HTML.
    * @param type 
