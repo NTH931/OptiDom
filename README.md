@@ -1,5 +1,7 @@
 # OptiDOM
 
+*No specific imports. No wrappers. Just power where it belongs — right on your native objects.*
+
 **OptiDOM** is a lightweight JavaScript DOM manipulation library that provides an optimized API for creating, managing, and updating HTML elements efficiently. It aims to provide a simple and intuitive way to work with DOM elements.
 
 ## Features
@@ -7,7 +9,43 @@
 - Supports dynamic styling and event handling
 - Easy to use and integrate into existing projects
 - Lightweight and performance-focused
-- AND ***Intergrated into the Base JavaScript API***
+
+### Intergration like you've never seen!
+OptiDOM isn’t just another library — it's **seamlessly integrated into the base JavaScript API.** This means you can use its features directly on native DOM objects without importing or wrapping.
+  
+- `Document`
+
+  - `document.bindShortcut('ctrl+s', callback)`
+
+  - `document.css('selector', styleObject)`
+
+  - `document.$('selector')`
+
+  - `document.elementcreator('tag')`
+
+- `HTMLElement`
+
+  - `.css(styles)`
+
+  - `.text(content)`
+
+  - `.html(htmlString)`
+
+  - `.getParent()`
+
+  - `.getAncestor(level)`
+
+  - `.addOnceListener(event, callback)`
+
+- `NodeList`
+
+  - `.addEventListener(event, callback)` — *like you always wished it worked.*
+
+- `Date`
+
+  - `Date.at(...)` — *for millisecond timestamps*
+
+Window, JSON, DOMTokenList, and more are also extended where useful.
 
 ## Installation
 
@@ -23,16 +61,16 @@ yarn add optidom
 ```
 ## Usage
 
-After installing, just add this line of code to the top of every file that uses OptiDOM
+Just import OptiDOM once per file:
 
 ```js
 import 'optidom';
 ```
-Then you can use optidom in that file!
+Then you're good to go!
 
 Here’s a basic example of how to use OptiDOM's features:
 
-### Bind shortcut
+### Bind Shortcuts
 ```js
 document.bindShortcut('ctrl+f', (event) => {
   console.log('Ctrl + F was pressed');
@@ -77,7 +115,9 @@ element.addOnceListener('click', () => {
 const timestamp = Date.at(2025, 3, 11, 14, 30, 0, 0);
 console.log(new Date(timestamp));
 ```
-### HTMLCreator
+
+## HTMLCreator
+
 ```js
 const parent = document.getElementById("parent");
 
@@ -96,7 +136,7 @@ document.elementcreator("div")
   .append(parent)
 ```
 
-### Time class
+## Time class
 ```js
 // Now
 const time = new Time();
