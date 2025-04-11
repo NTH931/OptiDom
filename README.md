@@ -32,14 +32,14 @@ Then you can use optidom in that file!
 
 Here’s a basic example of how to use OptiDOM's features:
 
-> Bind shortcut
+### Bind shortcut
 ```js
 document.bindShortcut('ctrl+f', (event) => {
   console.log('Ctrl + F was pressed');
 });
 ```
 
-> Element Methods
+### Element Methods
 ```js
 const div = document.createElement('div');
 
@@ -54,7 +54,7 @@ div.change("a").href = "https://example.com";
 
 ```
 
-> NodeList Listener
+### NodeList Listener
 ```js
 const buttons = document.querySelectorAll('button');
 
@@ -63,7 +63,7 @@ buttons.addEventListener('click', () => {
 });
 ```
 
-> Once Listener
+### Once Listener
 ```js
 const element = document.getElementById('myButton');
 
@@ -72,12 +72,12 @@ element.addOnceListener('click', () => {
 });
 ```
 
-> Date constructor for ms
+### Date Constructor for Milliseconds
 ```js
 const timestamp = Date.at(2025, 3, 11, 14, 30, 0, 0);
 console.log(new Date(timestamp));
 ```
-> HTMLCreator
+### HTMLCreator
 ```js
 const parent = document.getElementById("parent");
 
@@ -96,15 +96,31 @@ document.elementcreator("div")
   .append(parent)
 ```
 
-> Time class
+### Time class
 ```js
-const now = new Time();
+// Now
+const time = new Time();
+// At a specific time
+const timeAt = new Time(14, 30, 15, 250);
+// From date
+const timeDate = new Time(new Date());
 
-// Returns milliseconds since 00:00:00 (midnight)
-now.getMilliseconds();
+time.subtractMiliseconds(6000);
+timeAt.getTime();
+console.log(timeDate.toString());
+console.log(time.compare(timeAt)); // 1 / 0 / -1
+console.log(time.isBefore(timeDate));
+console.log(time.isAfter(timeAt));
+
+const parsed = Time.fromString("23:59:59.999");
+console.log(parsed.toISOString()); // "T23:59:59.999Z"
+
+const isoParsed = Time.fromISOString("T06:30:00.000Z");
+console.log(isoParsed.toString()); // "06:30:00"
+
 ```
 
-> Document CSS
+### Document CSS
 ```js
 document.css("body", {
   bakcgroundColor: "red",
@@ -112,12 +128,14 @@ document.css("body", {
 })
 ```
 
-> document.querySelector shorthand
+### document.querySelector shorthand
 ```js
 document.$("li.list#second")
 ```
 
-And typed versions of basic js functions:
+### Typed Functions
+
+OptiDOM also provides typed versions of basic JavaScript functions:
  - `JSON.parse`
  - `document.getElementById`
  - `document.getElementsByClassName`

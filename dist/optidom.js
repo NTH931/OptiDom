@@ -467,48 +467,12 @@ class TimeInternal {
     static now() {
         return new TimeInternal().getTime();
     }
-    ommitedString(omit) {
-        // If there's an omit value, handle the logic
-        if (omit) {
-            // If 'omit' is a string
-            if (typeof omit === "string") {
-                switch (omit) {
-                    case "hours":
-                        return `${this.minutes.toString().padStart(2, '0')}:${this.seconds.toString().padStart(2, '0')}`;
-                    case "minutes":
-                        return `${this.hours.toString().padStart(2, '0')}:${this.seconds.toString().padStart(2, '0')}`;
-                    case "seconds":
-                        return `${this.hours.toString().padStart(2, '0')}:${this.minutes.toString().padStart(2, '0')}`;
-                }
-            }
-            // If 'omit' is an array
-            const omitHours = omit.includes("hours");
-            const omitMinutes = omit.includes("minutes");
-            const omitSeconds = omit.includes("seconds");
-            const parts = [];
-            if (!omitHours) {
-                parts.push(this.hours.toString().padStart(2, '0'));
-            }
-            if (!omitMinutes) {
-                if (parts.length > 0)
-                    parts.push(":");
-                parts.push(this.minutes.toString().padStart(2, '0'));
-            }
-            if (!omitSeconds) {
-                if (parts.length > 0)
-                    parts.push(":");
-                parts.push(this.seconds.toString().padStart(2, '0'));
-            }
-            return parts.join("");
-        }
-        // Default case if nothing is omitted
-        return `${this.hours.toString().padStart(2, '0')}:${this.minutes.toString().padStart(2, '0')}:${this.seconds.toString().padStart(2, '0')}`;
-    }
     toString() {
-        return this.ommitedString();
+        return `${this.hours.toString().padStart(2, '0')}:${this.minutes.toString().padStart(2, '0')}:${this.seconds.toString().padStart(2, '0')}`;
+        ;
     }
     toISOString() {
-        return `T${this.ommitedString()}.${this.milliseconds.toString().padStart(3, '0')}Z`;
+        return `T${this.toString()}.${this.milliseconds.toString().padStart(3, '0')}Z`;
     }
     toJSON() {
         return this.toISOString(); // Leverage the existing toISOString() method
