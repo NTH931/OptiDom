@@ -1,6 +1,24 @@
-/* eslint-disable no-var */
 /* eslint-disable func-style */
-const bindShortcutSource = (shortcut, callback) => {
+function defineProperty(object, prop, getter, setter) {
+    Object.defineProperty(object, prop, {
+        get: getter,
+        set: setter,
+        enumerable: false,
+        configurable: true
+    });
+}
+function defineGetter(object, prop, getter) {
+    defineProperty(object, prop, getter);
+}
+function defineSetter(object, prop, setter) {
+    Object.defineProperty(object, prop, {
+        set: setter,
+        enumerable: false,
+        configurable: true
+    });
+}
+// Sources
+const bindShortcut = function (shortcut, callback) {
     document.addEventListener('keydown', (event) => {
         const keyboardEvent = event;
         const keys = shortcut
@@ -28,15 +46,18 @@ const bindShortcutSource = (shortcut, callback) => {
         }
     });
 };
-const addEventListenerEnumSource = function (type, listener, options) {
-    this.forEach(el => {
-        if (el instanceof HTMLElement) {
+const ready = function (callback) {
+    document.addEventListener("DOMContentLoaded", callback);
+};
+const addEventListenerEnum = function (type, listener, options) {
+    for (const el of this) {
+        if (el instanceof Element) {
             el.addEventListener(type, listener, options);
         }
-    });
-    return this; // Enable method chaining
+    }
+    return this;
 };
-const addOnceListenerSource = function (type, listener, options) {
+const addOnceListener = function (type, listener, options) {
     let repeatCount = 1; // Default to 1 if no repeat option provided
     // If options is a number, treat it as the repeat count
     if (typeof options === 'number') {
@@ -52,15 +73,21 @@ const addOnceListenerSource = function (type, listener, options) {
     };
     this.addEventListener(type, onceListener, options);
 };
-const atDateSource = (year, monthIndex, date, hours, minutes, seconds, ms) => {
+const atDate = (year, monthIndex, date, hours, minutes, seconds, ms) => {
     return new Date(year, monthIndex, date, hours, minutes, seconds, ms).getTime();
 };
-const addEventListenersSource = function (listeners, options) {
-    for (const listener of listeners) {
-        this.addEventListener(listener.key, listener.value, options);
+const addEventListeners = function (...listeners // Spread of event listener objects
+) {
+    for (const listenerObject of listeners) {
+        for (const event in listenerObject) {
+            const listener = listenerObject[event]; // Safely access listener by event key
+            if (listener) {
+                this.addEventListener(event, listener);
+            }
+        }
     }
 };
-const cssSource = function (key, value) {
+const css = function (key, value) {
     const css = this.style;
     if (typeof key === "string") {
         if (key in css && value !== undefined) {
@@ -75,7 +102,7 @@ const cssSource = function (key, value) {
         });
     }
 };
-const documentCssSource = function (element, object) {
+const documentCss = function (element, object) {
     const selector = element.trim();
     if (!selector) {
         throw new Error("Selector cannot be empty.");
@@ -134,10 +161,10 @@ const documentCssSource = function (element, object) {
         console.error("Failed to insert CSS rule:", err, { selector, styleString });
     }
 };
-const getParentSource = function () {
+const getParent = function () {
     return this.parentElement;
 };
-const getAncestorSource = function (level) {
+const getAncestor = function (level) {
     let ancestor = this;
     for (let i = 0; i < level; i++) {
         if (ancestor.parentElement === null)
@@ -146,14 +173,14 @@ const getAncestorSource = function (level) {
     }
     return ancestor;
 };
-const getAncestorQuerySource = function (selector) {
+const getAncestorQuery = function (selector) {
     const element = document.querySelector(selector);
     if (element?.contains(this)) {
         return element;
     }
     return null;
 };
-const createChildrenSource = function (elements) {
+const createChildren = function (elements) {
     const element = document.createElement(elements.element);
     if (elements.id) {
         element.id = elements.id;
@@ -193,7 +220,7 @@ const createChildrenSource = function (elements) {
     }
     this.appendChild(element);
 };
-const changeSource = function (newTag) {
+const change = function (newTag) {
     const newElement = document.createElement(newTag);
     // Copy attributes
     Array.from(this.attributes).forEach(attr => {
@@ -207,16 +234,19 @@ const changeSource = function (newTag) {
     this.replaceWith(newElement);
     return newElement;
 };
-const htmlSource = function (input) {
+const html = function (input) {
     return input !== undefined ? (this.innerHTML = input) : this.innerHTML;
 };
-const textSource = function (input) {
+const text = function (input) {
     return input !== undefined ? (this.textContent = input) : this.textContent || '';
 };
 const $ = function (selector) {
     return document.querySelector(selector);
 };
-const elementCreatorSource = function (el, attrs) {
+const $$ = function (selector) {
+    return document.querySelectorAll(selector);
+};
+const elementCreator = function (el, attrs) {
     return new HTMLElementCreator(el, attrs);
 };
 function toKebabCase(str) {
@@ -559,7 +589,8 @@ class TimeInternal {
         return first.compare(other) === 0;
     }
 }
-globalThis.bindShortcut = bindShortcutSource;
+//! Prototypes
+globalThis.bindShortcut = bindShortcut;
 globalThis.f = (iife) => iife();
 globalThis.LocalStorage = LocalStorageInternal;
 globalThis.Cookie = CookieInternal;
@@ -571,25 +602,27 @@ globalThis.UnknownError = class extends Error {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 };
-document.LocalStorage = LocalStorageInternal;
-document.Cookie = CookieInternal;
-document.elementCreator = elementCreatorSource;
-document.bindShortcut = bindShortcutSource;
-document.css = documentCssSource;
-document.$ = $;
-Date.at = atDateSource;
-NodeList.prototype.addEventListener = addEventListenerEnumSource;
-EventTarget.prototype.addOnceListener = addOnceListenerSource;
-EventTarget.prototype.addEventListeners = addEventListenersSource;
-HTMLElement.prototype.css = cssSource;
-HTMLElement.prototype.getParent = getParentSource;
-HTMLElement.prototype.getAncestor = getAncestorSource;
-HTMLElement.prototype.getAncestorQuery = getAncestorQuerySource;
-HTMLElement.prototype.createChildren = createChildrenSource;
-HTMLElement.prototype.elementCreator = function () {
-    return new HTMLElementCreator(this);
-};
-HTMLElement.prototype.change = changeSource;
-HTMLElement.prototype.html = htmlSource;
-HTMLElement.prototype.text = textSource;
+Document.prototype.ready = ready;
+Document.prototype.elementCreator = elementCreator;
+Document.prototype.bindShortcut = bindShortcut;
+Document.prototype.css = documentCss;
+Document.prototype.$ = $;
+Document.prototype.$$ = $$;
+Date.at = atDate;
+NodeList.prototype.addEventListener = addEventListenerEnum;
+HTMLCollection.prototype.addEventListener = addEventListenerEnum;
+EventTarget.prototype.addOnceListener = addOnceListener;
+EventTarget.prototype.addEventListeners = addEventListeners;
+HTMLElement.prototype.css = css;
+HTMLElement.prototype.createChildren = createChildren;
+HTMLElement.prototype.elementCreator = function () { return new HTMLElementCreator(this); };
+HTMLElement.prototype.change = change;
+HTMLElement.prototype.html = html;
+HTMLElement.prototype.text = text;
+Node.prototype.getParent = getParent;
+Node.prototype.getAncestor = getAncestor;
+Node.prototype.getAncestorQuery = getAncestorQuery;
+//! Getters & Setters
+defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
+defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
 export {};

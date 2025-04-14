@@ -4,7 +4,20 @@ type RegularKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k
 type Shortcut = `${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${ModifierKey}+${RegularKey}`
 type StringRecord<T> = Record<string, T>;
 
+type EventListenerMap = { [K in keyof HTMLElementEventMap]?: (this: EventTarget, ev: HTMLElementEventMap[K]) => any; }
+
+type EventMapOf<T> = T extends {
+  addEventListener<K extends keyof infer M>(
+    type: K,
+    listener: (this: T, ev: M[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+}
+  ? M
+  : Record<string, Event>;
+
 /**
+ * @optidom
  * @deprecated
  */
 interface HTMLElementCascade {
@@ -15,153 +28,11 @@ interface HTMLElementCascade {
   [key: string]: any
 }
 
-interface Document {
-  /** Create a event listener for shortcuts */
-  bindShortcut(shortcut: Shortcut, callback: (event: KeyboardEvent) => void): void;
-  getElementById<T extends HTMLElement>(this: Document, id: string): T | null;
-  getElementsByClassName<T extends Element>(this: Document, classNames: string): HTMLCollectionOf<T>;
-  getElementsByName<T extends HTMLElement>(this: Document, name: string): NodeListOf<T> | null;
-
-  /** Adds inline css to the element */
-  css(
-    element: keyof HTMLElementTagNameMap,
-    object?: Partial<Record<WritableCSSProperties, string>>
-  ): void;
-
-  /** Adds inline css to the element */
-  css(
-    element: string,
-    object?: Partial<Record<WritableCSSProperties, string>>
-  ): void;
-
-  /**
-   * Get an element based on a css selector provided 
-   * @param selector The css selector used to find the element(s)
-   */
-  $(selector: string): Element | HTMLElement | null;
-
-  /**
-   * Starts up the element creator
-   * @param superEl The parent element
-   */
-  elementCreator(superEl: keyof HTMLElementTagNameMap, attrs: HTMLAttrs): HTMLElementCreator;
-
-  Cookie: typeof main.Cookie;
-  LocalStorage: typeof main.LocalStorage;
-}
-
-interface HTMLElement {
-  // Rebinds to add type parameters
-  getElementsByClassName<T extends HTMLElement>(this: HTMLElement, classNames: string): NodeListOf<T>;
-  getElementsByTagName<T extends HTMLElement>(this: HTMLElement, tagName: string): HTMLCollectionOf<T>;
-  getElementsByTagNameNS<T extends HTMLElement>(this: HTMLElement, namespaceURI: string, localName: string): HTMLCollectionOf<T>;
-
-  //? New
-  /** Adds inline css to the element */
-  css(key: Partial<StringRecord<string>>): void;
-
-  /** Adds inline css to the element */
-  css(key: string, value: string): void;
-
-  /** 
-   * Gets the element's parent 
-   * @returns The parent HTMLElement
-   */
-  getParent(): HTMLElement;
-
-  /** 
-   * Gets the element's ancestor (ancestor selected is based on the amount of levels to navigate throught, as specified by level) 
-   * @param level The amount of levels to navigate upwards throught to get to the ancestor
-   * @returns The ancestor HTMLElement
-   */
-  getAncestor<T extends HTMLElement = HTMLElement>(level: number): T | null;
-
-  /** 
-   * Gets the element's ancestor (ancestor selected is based on the css selector) 
-   * @param selector The selector used to get the ancestor
-   * @returns The parent HTMLElement
-   */
-  getAncestorQuery<T extends Element>(this: HTMLElement, selector: string): T | null;
-
-  /**
-   * Creates children of the element
-   * @param elements The elements to use, specified by the cascade. The cascade is a {@link HTMLElementCascade}
-   * @deprecated use {@link document.elementCreator} or new {@link HTMLElementCreator}
-   */
-  createChildren(elements: HTMLElementCascade): void;
-
-  /**
-   * Starts up the element creator
-   */
-  elementCreator(this: HTMLElement): HTMLElementCreator;
-
-  /**
-   * Changing an elements tag name
-   * @warning BE CAREFUL WITH THIS FUNCTION, AS IT MODIFIES TAG NAMES, WHICH ARE A MAJOR PART OF HTML.
-   * @param type 
-   */
-  change<T extends keyof HTMLElementTagNameMap>(type: T): HTMLElementTagNameMap[T];
-
-  /**
-   * Modifys and/or returns the text of the element
-   * @notice use HTMLElement.{@link text} instead if you are not insterting raw html
-   * @param input The new text, if any
-   */
-  html(input?: string): string;
-
-  /**
-   * Modifys and/or returns the text of the element
-   * @param input The new text, if any
-   */
-  text(input?: string): string;
-}
-
-interface NodeList {
-  /** 
-   * Creates a common event listener for every single element in the NodeList 
-   * @param type The type of listener to use
-   * @param listener The callback of the listener
-   * @param options Optional options to give the listener
-   */
-  addEventListener<K extends keyof HTMLElementEventMap>(this: NodeList, type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void
-}
-
-interface EventTarget {
-  /** 
-   * Creates an event listener that, once triggererd, removes itself as a listener
-   * @param type The type of listener to use
-   * @param listener The callback of the listener
-   * @param options Optional options to give the listener (if number, the thats the amount of times th event has to be trigeered before being removed)
-   */
-  addOnceListener<K extends keyof HTMLElementEventMap>(
-    type: T,
-    listener: (event: GlobalEventHandlersEventMap[T]) => void,
-    options: boolean | AddEventListenerOptions | number
-  ): void;
-
-  /** 
-   * Creates multiple event listeners for a element
-   * @param listeners The listeners to apply
-   * @param options The common options for the event listeners
-   */
-  addEventListeners<K extends keyof HTMLElementEventMap>(
-    this: EventTarget,
-    listeners: { key: K, value: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any }[],
-    options?: boolean | AddEventListenerOptions
-  ): void
-}
-
-interface JSON {
-  parse<T = any>(text: string, reviver?: (this: T, key: string, value: any) => any): T | null
-}
-
-interface DateConstructor {
-  /** Returns an absolute number of time from January 1, 1970 */
-  at(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number;
-}
-
 
 /* New Classes */
+/**
+ * @optidom
+ */
 type HTMLAttrs = {
   text?: string,
   html?: string,
@@ -171,6 +42,9 @@ type HTMLAttrs = {
   [key: string]: any 
 };
 
+/**
+ * @optidom
+ */
 interface HTMLElementCreator {
   el(tag: keyof HTMLElementTagNameMap, attrs?: HTMLAttrs): HTMLElementCreator;
   container(tag: keyof HTMLElementTagNameMap, attrs?: HTMLAttrs): HTMLElementCreator;
@@ -179,6 +53,9 @@ interface HTMLElementCreator {
   get element(): HTMLElement;
 }
 
+/**
+ * @optidom
+ */
 declare class TimeInternal {
   hours: number;
   minutes: number;

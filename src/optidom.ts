@@ -1,12 +1,35 @@
-/* eslint-disable no-var */
 /* eslint-disable func-style */
+function defineProperty<T>(
+  object: any,
+  prop: PropertyKey,
+  getter: () => T,
+  setter?: (value: T) => void
+): void {
+  Object.defineProperty(object, prop, {
+    get: getter,
+    set: setter,
+    enumerable: false,
+    configurable: true
+  });
+}
 
-export {};
+function defineGetter<T>(object: any, prop: PropertyKey, getter: () => T): void {
+  defineProperty(object, prop, getter);
+}
 
-const bindShortcutSource = (
+function defineSetter<T>(object: any, prop: PropertyKey, setter: (value: T) => void): void {
+  Object.defineProperty(object, prop, {
+    set: setter,
+    enumerable: false,
+    configurable: true
+  });
+}
+
+// Sources
+const bindShortcut = function (
   shortcut: Shortcut,
   callback: (event: KeyboardEvent) => void
-): void => {
+): void {
   document.addEventListener('keydown', (event: Event) => {
     const keyboardEvent = event as KeyboardEvent;
     const keys = shortcut
@@ -35,24 +58,28 @@ const bindShortcutSource = (
   });
 };
 
-const addEventListenerEnumSource = function<K extends keyof HTMLElementEventMap>(
-  this: NodeList,
-  type: K,
-  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
-  options?: boolean | AddEventListenerOptions
-): NodeList {
-  this.forEach(el => {
-    if (el instanceof HTMLElement) {
-      el.addEventListener(type, listener, options);
-    }
-  });
-  return this; // Enable method chaining
+const ready = function (callback: (this: Document, ev: Event) => any) {
+  document.addEventListener("DOMContentLoaded", callback);
 };
 
-const addOnceListenerSource = function<K extends keyof HTMLElementEventMap>(
+const addEventListenerEnum = function<T extends EventTarget, K extends keyof EventMapOf<T>>(
+  this: Iterable<Element>,
+  type: K,
+  listener: (this: Element, ev: EventMapOf<T>[K]) => any,
+  options?: boolean | AddEventListenerOptions
+): typeof this {
+  for (const el of this) {
+    if (el instanceof Element) {
+      el.addEventListener(type as string, listener as EventListener, options);
+    }
+  }
+  return this;
+};
+
+const addOnceListener = function<T extends EventTarget, K extends keyof EventMapOf<T>>(
   this: HTMLElement,
   type: K,
-  listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+  listener: (this: HTMLElement, ev: EventMapOf<T>[K]) => any,
   options?: boolean | AddEventListenerOptions | number
 ): void {
   let repeatCount = 1; // Default to 1 if no repeat option provided
@@ -63,33 +90,37 @@ const addOnceListenerSource = function<K extends keyof HTMLElementEventMap>(
     options = undefined; // Reset options to undefined so that AddEventListenerOptions is not mixed
   }
 
-  const onceListener = (event: HTMLElementEventMap[K]) => {
+  const onceListener = (event: EventMapOf<T>[K]) => {
     listener.call(this, event);
     repeatCount--;
 
     if (repeatCount <= 0) {
-      this.removeEventListener(type, onceListener, options);
+      this.removeEventListener(type as string, onceListener as EventListener, options);
     }
   };
 
-  this.addEventListener(type, onceListener, options);
+  this.addEventListener(type as string, onceListener as EventListener, options);
 };
 
-const atDateSource = (year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number => {
+const atDate = (year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): number => {
   return new Date(year, monthIndex, date, hours, minutes, seconds, ms).getTime();
 };
 
-const addEventListenersSource = function <K extends keyof HTMLElementEventMap>(
+const addEventListeners = function<T extends EventTarget, K extends keyof EventMapOf<T>>(
   this: EventTarget,
-  listeners: { key: K; value: (this: EventTarget, ev: HTMLElementEventMap[K]) => any }[],
-  options?: boolean | AddEventListenerOptions
+  ...listeners: Record<K, (e: EventMapOf<T>[K]) => any>[] // Spread of event listener objects
 ): void {
-  for (const listener of listeners) {
-    this.addEventListener(listener.key, listener.value as EventListener, options);
+  for (const listenerObject of listeners) {
+    for (const event in listenerObject) {
+      const listener = listenerObject[event as K]; // Safely access listener by event key
+      if (listener) {
+        this.addEventListener(event, listener as EventListener);
+      }
+    }
   }
 };
 
-const cssSource = function(
+const css = function(
   this: HTMLElement,
   key: string | Partial<StringRecord<string>>,
   value?: string
@@ -109,7 +140,7 @@ const cssSource = function(
   }
 };
 
-const documentCssSource = function (
+const documentCss = function (
   element: keyof HTMLElementTagNameMap | string,
   object?: Partial<Record<keyof CSSStyleDeclaration, string>>
 ): void {
@@ -181,12 +212,12 @@ const documentCssSource = function (
   }
 };
 
-const getParentSource = function (this: HTMLElement): HTMLElement {
-  return this.parentElement as HTMLElement;
+const getParent = function (this: Node): Node | null {
+  return this.parentElement;
 };
 
-const getAncestorSource = function <T extends HTMLElement = HTMLElement>(this: HTMLElement, level: number): T | null {
-  let ancestor: HTMLElement = this;
+const getAncestor = function <T extends Node = Node>(this: Node, level: number): T | null {
+  let ancestor: Node = this;
 
   for (let i = 0; i < level; i++) {
     if (ancestor.parentElement === null) return null;
@@ -197,7 +228,7 @@ const getAncestorSource = function <T extends HTMLElement = HTMLElement>(this: H
   return ancestor as T;
 };
 
-const getAncestorQuerySource = function <T extends Element>(this: HTMLElement, selector: string): T | null {
+const getAncestorQuery = function <T extends Element>(this: Element, selector: string): T | null {
   const element = document.querySelector<T>(selector);
 
   if (element?.contains(this)) {
@@ -207,7 +238,7 @@ const getAncestorQuerySource = function <T extends Element>(this: HTMLElement, s
   return null;
 };
 
-const createChildrenSource = function (this: HTMLElement, elements: HTMLElementCascade): void {
+const createChildren = function (this: HTMLElement, elements: HTMLElementCascade): void {
   const element = document.createElement(elements.element);
 
   if (elements.id) {
@@ -250,7 +281,7 @@ const createChildrenSource = function (this: HTMLElement, elements: HTMLElementC
   this.appendChild(element);
 };
 
-const changeSource = function <T extends keyof HTMLElementTagNameMap>(this: HTMLElement, newTag: T): HTMLElementTagNameMap[T] {
+const change = function <T extends keyof HTMLElementTagNameMap>(this: HTMLElement, newTag: T): HTMLElementTagNameMap[T] {
   const newElement = document.createElement(newTag) as HTMLElementTagNameMap[T];
 
   // Copy attributes
@@ -269,11 +300,11 @@ const changeSource = function <T extends keyof HTMLElementTagNameMap>(this: HTML
   return newElement;
 };
 
-const htmlSource = function (this: HTMLElement, input?: string): string {
+const html = function (this: HTMLElement, input?: string): string {
   return input !== undefined ? (this.innerHTML = input) : this.innerHTML;
 };
 
-const textSource = function (this: HTMLElement, input?: string): string {
+const text = function (this: HTMLElement, input?: string): string {
   return input !== undefined ? (this.textContent = input) : this.textContent || '';
 };
 
@@ -281,7 +312,11 @@ const $ = function(selector: string) {
   return document.querySelector(selector);
 };
 
-const elementCreatorSource = function(el: keyof HTMLElementTagNameMap, attrs: HTMLAttrs) {
+const $$ = function(selector: string) {
+  return document.querySelectorAll(selector);
+};
+
+const elementCreator = function(el: keyof HTMLElementTagNameMap, attrs: HTMLAttrs) {
   return new HTMLElementCreator(el, attrs);
 };
 
@@ -674,27 +709,9 @@ class TimeInternal {
   }
 }
 
-declare global {
-  /** 
-   * Create a event listener for shortcuts
-   * @param shortcut The shortcut that triggers the callback
-   * @param callback The callback triggered when the shortcut is triggered
-   */
-  function bindShortcut(shortcut: Shortcut, callback: (event: KeyboardEvent) => void): void;
+//! Prototypes
 
-  /** 
-   * Creates an iife (Immediately invoked function expression) that triggers on run 
-   * @param iife The function to run the code in for the iife
-   */
-  function f(iife: () => void): void;
-
-  var Cookie: typeof CookieInternal;
-  var LocalStorage: typeof LocalStorageInternal;
-  var UnknownError: ErrorType;
-  var Time: typeof TimeInternal;
-}
-
-globalThis.bindShortcut = bindShortcutSource;
+globalThis.bindShortcut = bindShortcut;
 globalThis.f = (iife: () => void) => iife();
 globalThis.LocalStorage = LocalStorageInternal;
 globalThis.Cookie = CookieInternal;
@@ -707,27 +724,32 @@ globalThis.UnknownError = class extends Error {
   }
 };
 
-document.LocalStorage = LocalStorageInternal;
-document.Cookie = CookieInternal;
-document.elementCreator = elementCreatorSource;
-document.bindShortcut = bindShortcutSource;
-document.css = documentCssSource;
-document.$ = $;
+Document.prototype.ready = ready;
+Document.prototype.elementCreator = elementCreator;
+Document.prototype.bindShortcut = bindShortcut;
+Document.prototype.css = documentCss;
+Document.prototype.$ = $;
+Document.prototype.$$ = $$;
 
-Date.at = atDateSource;
+Date.at = atDate;
 
-NodeList.prototype.addEventListener = addEventListenerEnumSource;
-EventTarget.prototype.addOnceListener = addOnceListenerSource;
-EventTarget.prototype.addEventListeners = addEventListenersSource;
+NodeList.prototype.addEventListener = addEventListenerEnum;
+HTMLCollection.prototype.addEventListener = addEventListenerEnum;
+EventTarget.prototype.addOnceListener = addOnceListener;
+EventTarget.prototype.addEventListeners = addEventListeners;
 
-HTMLElement.prototype.css = cssSource;
-HTMLElement.prototype.getParent = getParentSource;
-HTMLElement.prototype.getAncestor = getAncestorSource;
-HTMLElement.prototype.getAncestorQuery = getAncestorQuerySource;
-HTMLElement.prototype.createChildren = createChildrenSource;
-HTMLElement.prototype.elementCreator = function (this: HTMLElement) { 
-  return new HTMLElementCreator(this);
-};
-HTMLElement.prototype.change = changeSource;
-HTMLElement.prototype.html = htmlSource;
-HTMLElement.prototype.text = textSource;
+HTMLElement.prototype.css = css;
+HTMLElement.prototype.createChildren = createChildren;
+HTMLElement.prototype.elementCreator = function (this: HTMLElement) { return new HTMLElementCreator(this);};
+HTMLElement.prototype.change = change;
+HTMLElement.prototype.html = html;
+HTMLElement.prototype.text = text;
+
+Node.prototype.getParent = getParent;
+Node.prototype.getAncestor = getAncestor;
+Node.prototype.getAncestorQuery = getAncestorQuery;
+
+//! Getters & Setters
+
+defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
+defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
