@@ -1,8 +1,38 @@
 {
   "name": "optidom",
   "type": "module",
-  "version": "2.3.0",
-  "main": "dist/bundle.js",
+  "version": "2.4.0",
+  "description": "Lightweight DOM manipulation, styling, and utility extension for native JavaScript objects — without wrappers.",
+  "main": "dist/optidom.js",
   "types": "src/types/optidom.lib.d.ts",
-  "files": ["src/types", "dist"]
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NTH931/optidom.git"
+  },
+  "keywords": [
+    "dom",
+    "javascript",
+    "optidom",
+    "utility",
+    "dom-manipulation",
+    "native",
+    "library",
+    "web",
+    "frontend"
+  ],
+  "author": "LeaTHeR_SHoRTs",
+  "license": "CC-BY-NC-SA-4.0",
+  "bugs": {
+    "url": "https://github.com/NTH931/optidom/issues"
+  },
+  "homepage": "https://github.com/NTH931/optidom#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "src/types",
+    "dist",
+    "LICENSE",
+    "README.md"
+  ]
 }

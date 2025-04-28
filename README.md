@@ -10,7 +10,7 @@
 - Easy to use and integrate into existing projects
 - Lightweight and performance-focused
 
-### Intergration like you've never seen!
+### Integration like you've never seen!
 OptiDOM isn’t just another library — it's **seamlessly integrated into the base JavaScript API.** This means you can use its features directly on native DOM objects without importing or wrapping.
   
 - `Document`
@@ -66,7 +66,7 @@ Just import OptiDOM once per file:
 ```js
 import 'optidom';
 ```
-Then you're good to go!
+Then you're good to go! OptiDOM will then automatically attack the functions to the javascript objects
 
 Here’s a basic example of how to use OptiDOM's features:
 
@@ -87,7 +87,7 @@ div.html("<p>Paragraph</p>");
 div.getParent().text("Im a parent!");
 div.getAncestor(2)?.text("Im an ancestor!");
 
-// WARNING: Unstable
+// WARNING: Unstable, changes the HTML tag
 div.tag("a").href = "https://example.com";
 
 ```
@@ -163,14 +163,18 @@ console.log(isoParsed.toString()); // "06:30:00"
 ### Document CSS
 ```js
 document.css("body", {
-  bakcgroundColor: "red",
-  padding: 0;
+  backgroundColor: "red",
+  padding: 0,
 })
 ```
 
 ### document.querySelector shorthand
 ```js
 document.$("li.list#second")
+
+// same as
+
+document.querySelector("li.list#second");
 ```
 
 ### Typed Functions
