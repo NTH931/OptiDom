@@ -9,13 +9,17 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "src/",
     "outDir": "dist/",
-    "types": ["./src/optidom.d.ts"],
+    "types": [
+      "./src/types/optidom.d.ts",
+      "./src/types/optidom.lib.d.ts",
+      "./src/types/deprecation.d.ts",
+      "./src/types/alterations.d.ts",
+      "./src/types/classes.d.ts"
+    ],
     "lib": ["DOM", "ES2020", "ESNext"]
   },
   "include": [
-    "src/**/*",        // Include your source files
-    "optidom.lib.d.ts",    // Explicitly include global.d.ts
-    "deprecation.d.ts",
-    "alterations.d.ts"
+    "src/**/*",
+    "types/**/*"
   ]
 }

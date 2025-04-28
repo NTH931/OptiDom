@@ -35,7 +35,7 @@ OptiDOM isn’t just another library — it's **seamlessly integrated into the b
 
   - `.getAncestor(level)`
 
-  - `.addOnceListener(event, callback)`
+  - `.addBoundListener(event, callback)`
 
 - `NodeList`
 
@@ -88,7 +88,7 @@ div.getParent().text("Im a parent!");
 div.getAncestor(2)?.text("Im an ancestor!");
 
 // WARNING: Unstable
-div.change("a").href = "https://example.com";
+div.tag("a").href = "https://example.com";
 
 ```
 
@@ -105,7 +105,7 @@ buttons.addEventListener('click', () => {
 ```js
 const element = document.getElementById('myButton');
 
-element.addOnceListener('click', () => {
+element.addBoundListener('click', () => {
   alert('This will only trigger once!');
 });
 ```

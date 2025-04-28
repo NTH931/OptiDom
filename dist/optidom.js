@@ -17,6 +17,9 @@ function defineSetter(object, prop, setter) {
         configurable: true
     });
 }
+function toArray(collection) {
+    return Array.from(collection);
+}
 // Sources
 const bindShortcut = function (shortcut, callback) {
     document.addEventListener('keydown', (event) => {
@@ -46,8 +49,14 @@ const bindShortcut = function (shortcut, callback) {
         }
     });
 };
+const fromTime = function (time, year, monthIndex, date) {
+    return new Date(year, monthIndex, date, time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+};
 const ready = function (callback) {
     document.addEventListener("DOMContentLoaded", callback);
+};
+const leaving = function (callback) {
+    document.addEventListener("unload", (e) => callback.call(document, e));
 };
 const addEventListenerEnum = function (type, listener, options) {
     for (const el of this) {
@@ -55,15 +64,11 @@ const addEventListenerEnum = function (type, listener, options) {
             el.addEventListener(type, listener, options);
         }
     }
-    return this;
 };
-const addOnceListener = function (type, listener, options) {
-    let repeatCount = 1; // Default to 1 if no repeat option provided
-    // If options is a number, treat it as the repeat count
-    if (typeof options === 'number') {
-        repeatCount = options;
-        options = undefined; // Reset options to undefined so that AddEventListenerOptions is not mixed
-    }
+const addBoundListener = function (type, listener, times, options) {
+    if (times <= 0)
+        return;
+    let repeatCount = times; // Default to 1 if no repeat option provided
     const onceListener = (event) => {
         listener.call(this, event);
         repeatCount--;
@@ -73,33 +78,91 @@ const addOnceListener = function (type, listener, options) {
     };
     this.addEventListener(type, onceListener, options);
 };
+const hasText = function (text) {
+    if (typeof text === "string") {
+        return this.text().includes(text);
+    }
+    else {
+        return text.test(this.text());
+    }
+};
+const addClassList = function (elClass) {
+    for (const el of this) {
+        el.addClass(elClass);
+    }
+};
+const removeClassList = function (elClass) {
+    for (const el of this) {
+        el.removeClass(elClass);
+    }
+};
+const toggleClassList = function (elClass) {
+    for (const el of this) {
+        el.toggleClass(elClass);
+    }
+};
+const addClass = function (elClass) {
+    this.classList.add(elClass);
+};
+const removeClass = function (elClass) {
+    this.classList.remove(elClass);
+};
+const toggleClass = function (elClass) {
+    this.classList.toggle(elClass);
+};
+const hasClass = function (elClass) {
+    return this.classList.contains(elClass);
+};
 const atDate = (year, monthIndex, date, hours, minutes, seconds, ms) => {
     return new Date(year, monthIndex, date, hours, minutes, seconds, ms).getTime();
 };
-const addEventListeners = function (...listeners // Spread of event listener objects
-) {
-    for (const listenerObject of listeners) {
-        for (const event in listenerObject) {
-            const listener = listenerObject[event]; // Safely access listener by event key
-            if (listener) {
-                this.addEventListener(event, listener);
-            }
-        }
-    }
-};
-const css = function (key, value) {
-    const css = this.style;
-    if (typeof key === "string") {
-        if (key in css && value !== undefined) {
-            css[key] = value;
+function addEventListeners(listenersOrTypes, callback, options) {
+    if (Array.isArray(listenersOrTypes)) {
+        for (const type of listenersOrTypes) {
+            this.addEventListener(String(type), callback, options);
         }
     }
     else {
-        Object.entries(key).forEach(([prop, val]) => {
-            if (prop in css) {
-                css[prop] = val;
+        for (const [event, listener] of Object.entries(listenersOrTypes)) {
+            if (listener) {
+                this.addEventListener(String(event), listener, options);
             }
-        });
+        }
+    }
+}
+;
+const css = function (key, value) {
+    const css = this.style;
+    if (!key) {
+        // Return all styles
+        const result = {};
+        for (let i = 0; i < css.length; i++) {
+            const prop = css.item(i);
+            if (prop) {
+                result[prop] = css.getPropertyValue(prop).trim();
+            }
+        }
+        return result;
+    }
+    if (typeof key === "string") {
+        if (value === undefined) {
+            // Get one value
+            return css.getPropertyValue(key).trim();
+        }
+        else {
+            // Set one value
+            if (key in css) {
+                css.setProperty(key, value);
+            }
+        }
+    }
+    else {
+        // Set multiple
+        for (const [prop, val] of Object.entries(key)) {
+            if (prop in css && val !== null && val !== undefined) {
+                css.setProperty(prop, val.toString());
+            }
+        }
     }
 };
 const documentCss = function (element, object) {
@@ -114,25 +177,6 @@ const documentCss = function (element, object) {
         document.head.appendChild(styleTag);
     }
     const sheet = styleTag.sheet;
-    if (!object || Object.keys(object).length === 0) {
-        // Remove rule
-        for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
-            const rule = sheet.cssRules[i];
-            if (rule instanceof CSSStyleRule && rule.selectorText === selector) {
-                sheet.deleteRule(i);
-                break;
-            }
-        }
-        return;
-    }
-    // Convert camelCase to kebab-case
-    const newStyles = {};
-    for (const [prop, val] of Object.entries(object)) {
-        if (val !== null && val !== undefined) {
-            const kebab = prop.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
-            newStyles[kebab] = val;
-        }
-    }
     let ruleIndex = -1;
     const existingStyles = {};
     for (let i = 0; i < sheet.cssRules.length; i++) {
@@ -145,6 +189,17 @@ const documentCss = function (element, object) {
                 existingStyles[name] = declarations.getPropertyValue(name).trim();
             }
             break;
+        }
+    }
+    if (!object || Object.keys(object).length === 0) {
+        return existingStyles;
+    }
+    // Convert camelCase to kebab-case
+    const newStyles = {};
+    for (const [prop, val] of Object.entries(object)) {
+        if (val !== null && val !== undefined) {
+            const kebab = prop.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
+            newStyles[kebab] = val.toString();
         }
     }
     const mergedStyles = { ...existingStyles, ...newStyles };
@@ -167,13 +222,13 @@ const getParent = function () {
 const getAncestor = function (level) {
     let ancestor = this;
     for (let i = 0; i < level; i++) {
-        if (ancestor.parentElement === null)
+        if (ancestor.parentNode === null)
             return null;
-        ancestor = ancestor.parentElement;
+        ancestor = ancestor.parentNode;
     }
     return ancestor;
 };
-const getAncestorQuery = function (selector) {
+const querySelectAncestor = function (selector) {
     const element = document.querySelector(selector);
     if (element?.contains(this)) {
         return element;
@@ -220,25 +275,66 @@ const createChildren = function (elements) {
     }
     this.appendChild(element);
 };
-const change = function (newTag) {
+const tag = function (newTag) {
+    if (!newTag) {
+        return this.tagName.toLowerCase();
+    }
     const newElement = document.createElement(newTag);
     // Copy attributes
     Array.from(this.attributes).forEach(attr => {
         newElement.setAttribute(attr.name, attr.value);
     });
-    // Move children
+    // Copy dataset
+    Object.entries(this.dataset).forEach(([key, value]) => {
+        newElement.dataset[key] = value;
+    });
+    // Copy inline styles
+    newElement.style.cssText = this.style.cssText;
+    // Copy classes
+    newElement.className = this.className;
+    // Copy child nodes
     while (this.firstChild) {
         newElement.appendChild(this.firstChild);
     }
-    // Replace the current element with the new one
+    // Transfer listeners (if you have a system for it)
+    if (this._eventListeners instanceof Map) {
+        const listeners = this._eventListeners;
+        listeners.forEach((fns, type) => {
+            fns.forEach(fn => newElement.addEventListener(type, fn));
+        });
+        newElement._eventListeners = new Map(listeners);
+    }
+    // Optional: Copy properties (if you have custom prototype extensions)
+    for (const key in this) {
+        // Skip built-in DOM properties and functions
+        if (!(key in newElement) &&
+            typeof this[key] !== "function") {
+            try {
+                newElement[key] = this[key];
+            }
+            catch {
+                // Some props might be readonly — safely ignore
+            }
+        }
+    }
     this.replaceWith(newElement);
     return newElement;
 };
 const html = function (input) {
     return input !== undefined ? (this.innerHTML = input) : this.innerHTML;
 };
-const text = function (input) {
-    return input !== undefined ? (this.textContent = input) : this.textContent || '';
+const text = function (text, ...input) {
+    // If text is provided, update the textContent
+    if (text !== undefined) {
+        input.unshift(text); // Add the text parameter to the beginning of the input array
+        const joined = input.join(" "); // Join all the strings with a space
+        // Replace "textContent" if it's found in the joined string (optional logic)
+        this.textContent = joined.includes("textContent")
+            ? joined.replace("textContent", this.textContent ?? "")
+            : joined;
+    }
+    // Return the current textContent if no arguments are passed
+    return this.textContent ?? "";
 };
 const $ = function (selector) {
     return document.querySelector(selector);
@@ -246,15 +342,270 @@ const $ = function (selector) {
 const $$ = function (selector) {
     return document.querySelectorAll(selector);
 };
-const elementCreator = function (el, attrs) {
-    return new HTMLElementCreator(el, attrs);
+const origionalRandom = Math.random;
+const random = (max) => {
+    if (max) {
+        return origionalRandom() * max;
+    }
+    else
+        return origionalRandom();
 };
+const show = function () {
+    this.css("visibility", "visible");
+};
+const hide = function () {
+    this.css("visibility", "hidden");
+};
+const toggle = function () {
+    if (this.css("visibility") === "visible") {
+        this.hide();
+    }
+    else {
+        this.show();
+    }
+};
+const find = function (selector) {
+    return this.querySelector(selector); // Returns a single Element or null
+};
+const findAll = function (selector) {
+    return this.querySelectorAll(selector); // Returns a single Element or null
+};
+const getChildren = function () {
+    return this.childNodes;
+};
+const getSiblings = function (inclusive) {
+    const siblings = Array.from(this.parentNode.childNodes);
+    if (inclusive) {
+        return siblings; // Include current node as part of siblings
+    }
+    else {
+        return siblings.filter(node => !node.isSameNode(this));
+    }
+};
+const serialize = function () {
+    const formData = new FormData(this); // Create a FormData object from the form
+    // Create an array to hold key-value pairs
+    const entries = [];
+    // Use FormData's forEach method to collect form data
+    formData.forEach((value, key) => {
+        entries.push([key, value.toString()]);
+    });
+    // Convert the entries into a query string
+    return entries
+        .map(([key, value]) => {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(value);
+    })
+        .join('&'); // Join the array into a single string, separated by '&'
+};
+const clone = function (object, deep) {
+    const shallowClone = () => Object.assign(Object.create(Object.getPrototypeOf(object)), object);
+    const deepClone = (obj, seen = new WeakMap()) => {
+        if (obj === null || typeof obj !== "object")
+            return obj;
+        if (seen.has(obj))
+            return seen.get(obj);
+        // Preserve prototype
+        const cloned = Array.isArray(obj)
+            ? []
+            : Object.create(Object.getPrototypeOf(obj));
+        seen.set(obj, cloned);
+        if (obj instanceof Date)
+            return new Date(obj.getTime());
+        if (obj instanceof RegExp)
+            return new RegExp(obj);
+        if (obj instanceof Map) {
+            obj.forEach((v, k) => cloned.set(deepClone(k, seen), deepClone(v, seen)));
+            return cloned;
+        }
+        if (obj instanceof Set) {
+            obj.forEach(v => cloned.add(deepClone(v, seen)));
+            return cloned;
+        }
+        if (ArrayBuffer.isView(obj))
+            return new obj.constructor(obj);
+        if (obj instanceof ArrayBuffer)
+            return obj.slice(0);
+        for (const key of Reflect.ownKeys(obj)) {
+            cloned[key] = deepClone(obj[key], seen);
+        }
+        return cloned;
+    };
+    return deep ? deepClone(object) : shallowClone();
+};
+const repeat = function (iterator) {
+    for (let i = 0; i < this; i++) {
+        iterator(i);
+    }
+};
+const unique = function () {
+    return [...new Set(this)];
+};
+const chunk = function (chunkSize) {
+    if (chunkSize <= 0)
+        throw new TypeError("`chunkSize` cannot be a number below 1");
+    const newArr = [];
+    let tempArr = [];
+    this.forEach(val => {
+        tempArr.push(val);
+        if (tempArr.length === chunkSize) {
+            newArr.push(tempArr);
+            tempArr = []; // Reset tempArr for the next chunk
+        }
+    });
+    // Add the remaining elements in tempArr if any
+    if (tempArr.length) {
+        newArr.push(tempArr);
+    }
+    return newArr;
+};
+const remove = function (finder) {
+    return this.replace(finder, "");
+};
+const removeAll = function (finder) {
+    if (finder instanceof RegExp) {
+        if (!finder.flags.includes("g")) {
+            finder = new RegExp(finder.source, finder.flags + "g");
+        }
+    }
+    return this.replaceAll(finder, "");
+};
+const elementCreator = function () {
+    return new HTMLElementCreator(this);
+};
+const elementCreatorDocument = function (superEl, attrs) {
+    return new HTMLElementCreator(superEl, attrs);
+};
+const type = function (val) {
+    if (val === null)
+        return "null";
+    if (val === undefined)
+        return "undefined";
+    const typeOf = typeof val;
+    if (typeOf !== "object")
+        return typeOf;
+    const toString = Object.prototype.toString.call(val);
+    return toString.slice(8, -1).toLowerCase(); // extracts 'Array', 'Object', 'Date', etc.
+};
+function isEmpty(val) {
+    // Generic type checking
+    // eslint-disable-next-line eqeqeq
+    if (val == null || val === false || val === "")
+        return true;
+    // Number checking
+    if (typeof val === "number")
+        return val === 0 || Number.isNaN(val);
+    // Array checking
+    if (Array.isArray(val) && val.length === 0)
+        return true;
+    // Map, Set, and weak variant checks
+    if (val instanceof Map || val instanceof Set || val instanceof WeakMap || val instanceof WeakSet) {
+        return val.size === 0; // size check works for these types
+    }
+    // Object checking
+    if (typeof val === "object" && val !== null && Object.keys(val).length === 0)
+        return true;
+    return false;
+}
+function createEventListener(triggers, callback) {
+    const originals = triggers.map(fn => fn);
+    triggers.forEach((originalFn, i) => {
+        const wrapper = function (...args) {
+            const result = originals[i].apply(this, args);
+            callback(...triggers.map((_, j) => j === i ? result : undefined));
+            return result;
+        };
+        // Replace the function in its scope — must be globally replaceable or mutable to work
+        const fnName = originalFn.name;
+        if (typeof window !== "undefined" && fnName && window[fnName] === originalFn) {
+            window[fnName] = wrapper;
+        }
+        else {
+            console.warn("Cannot replace function:", originalFn);
+        }
+    });
+}
 function toKebabCase(str) {
     return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
-// -------------------------------------------------------------------------------------------------
+const forEach = function (object, iterator) {
+    for (const key in object) {
+        if (Object.prototype.hasOwnProperty.call(object, key)) {
+            iterator(key, object[key]);
+        }
+    }
+};
+const parseFile = async function (file, receiver) {
+    const fileContent = await fetch(file).then(res => res.json());
+    if (!receiver) {
+        return fileContent;
+    }
+    return receiver(fileContent);
+};
+class OptiDOM {
+    deprecatedMigration = {
+        // Node interface
+        "Node.parentElement": "Node.getParent",
+        "Node.parentNode": "Node.getParent",
+        "Node.querySelector": "Node.find",
+        "Node.querySelectorAll": "Node.find",
+        "Node.textContent": "Element.text",
+        // Document interface
+        "Document.cookie": "Cookie",
+        "Document.addEventListener (DOMContentLoaded)": "document.ready",
+        "Document.addEventListener (load)": "document.ready",
+        "Document.addEventListener (unload)": "document.leaving",
+        // Window interface
+        "Window.innerHeight": "window.height",
+        "Window.innerWidth": "window.width",
+        "Window.addEventListener (DOMContentLoaded)": "document.ready",
+        "Window.addEventListener (beforeunload)": "document.leaving",
+        "Window.addEventListener (unload)": "document.leaving",
+        // HTMLElement interface
+        "HTMLElement.innerHTML": "HTMLElement.html",
+        "HTMLElement.innerText": "Node.text",
+        // Storage related
+        "localStorage": "LocalStorage",
+        "sessionStorage": "SessionStorage"
+    };
+    // Define the objects that will be patched (can be extended as needed)
+    objectMap = {
+        Node: Node.prototype,
+        Document: Document.prototype,
+        Window: Window.prototype,
+        HTMLElement: HTMLElement.prototype
+    };
+    // Automatically deprecate a function and recommend a replacement
+    deprecate(funcName, force = false) {
+        const migration = this.deprecatedMigration[funcName];
+        if (migration) {
+            // Loop over all objects in the registry and deprecate the function if it's found
+            for (const [objName, baseObj] of Object.entries(this.objectMap)) {
+                if (typeof baseObj[funcName] === 'function') {
+                    const original = baseObj[funcName];
+                    // Replace function with a deprecation warning and call the original
+                    baseObj[funcName] = function (...args) {
+                        console.warn(`[OptiDOM] ${funcName} is deprecated. Use ${migration} instead.`);
+                        if (!force) {
+                            return original.apply(this, args);
+                        }
+                        else
+                            throw new NotImplementedError(`[OptiDOM] ${funcName} is deprecated. Use ${migration} instead.`);
+                    };
+                    console.info(`[OptiDOM] Deprecated function: ${funcName} on ${objName}. Use ${migration} instead.`);
+                    break; // Stop once deprecated
+                }
+            }
+        }
+    }
+    // Automatically apply multiple patches at once
+    deprecateAll(force = false) {
+        for (const funcName in this.deprecatedMigration) {
+            this.deprecate(funcName, force); // Apply deprecation
+        }
+    }
+}
 // Cookie Class
-class CookieInternal {
+class Cookie {
     name;
     value;
     expiry;
@@ -263,9 +614,9 @@ class CookieInternal {
         this.name = name;
         this.expiry = days;
         this.path = path;
-        const existingValue = CookieInternal.get(name);
+        const existingValue = Cookie.get(name);
         if (existingValue === null && valueIfNotExist !== null) {
-            CookieInternal.set(name, valueIfNotExist, days, path);
+            Cookie.set(name, valueIfNotExist, days, path);
             this.value = valueIfNotExist;
         }
         else {
@@ -287,11 +638,11 @@ class CookieInternal {
     /** Instance methods to interact with this specific cookie */
     update(value, days = this.expiry, path = this.path) {
         this.value = value;
-        CookieInternal.set(this.name, value, days, path);
+        Cookie.set(this.name, value, days, path);
     }
     delete() {
         this.value = null;
-        CookieInternal.delete(this.name, this.path);
+        Cookie.delete(this.name, this.path);
     }
     getValue() { return this.value; }
     getName() { return this.name; }
@@ -299,76 +650,108 @@ class CookieInternal {
     getPath() { return this.path; }
 }
 // Storage Class
-class LocalStorageInternal {
+class LocalStorage {
     name;
     value;
-    _isSession;
-    constructor(name, valueIfNotExist = null, isSession = false) {
+    constructor(name, valueIfNotExist = null) {
         this.name = name;
-        this._isSession = isSession;
-        const existingValue = LocalStorageInternal.get(name);
+        const existingValue = LocalStorage.get(name);
         if (existingValue === null && valueIfNotExist !== null) {
-            LocalStorageInternal.set(name, valueIfNotExist, isSession);
+            LocalStorage.set(name, valueIfNotExist);
             this.value = valueIfNotExist;
         }
         else {
             this.value = existingValue;
         }
     }
-    static set(key, value, isSession = false) {
-        const storage = isSession ? sessionStorage : localStorage;
-        storage.setItem(key, JSON.stringify(value));
+    static set(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
     }
-    static get(key, isSession = false) {
-        const storage = isSession ? sessionStorage : localStorage;
-        const value = storage.getItem(key);
+    static get(key) {
+        const value = localStorage.getItem(key);
         return value ? JSON.parse(value) : null;
     }
-    static remove(key, isSession = false) {
-        const storage = isSession ? sessionStorage : localStorage;
-        storage.removeItem(key);
+    static remove(key) {
+        localStorage.removeItem(key);
     }
-    static clear(isSession = false) {
-        const storage = isSession ? sessionStorage : localStorage;
-        storage.clear();
+    static clear() {
+        localStorage.clear();
     }
     /** Instance methods to interact with this specific cookie */
     update(value) {
         this.value = value;
-        LocalStorageInternal.set(this.name, value);
+        LocalStorage.set(this.name, value);
     }
     delete() {
         this.value = null;
-        LocalStorageInternal.remove(this.name);
+        LocalStorage.remove(this.name);
     }
     getValue() { return this.value; }
     getName() { return this.name; }
-    isSession() { return this._isSession; }
+}
+class SessionStorage {
+    name;
+    value;
+    constructor(name, valueIfNotExist = null) {
+        this.name = name;
+        const existingValue = SessionStorage.get(name);
+        if (existingValue === null && valueIfNotExist !== null) {
+            SessionStorage.set(name, valueIfNotExist);
+            this.value = valueIfNotExist;
+        }
+        else {
+            this.value = existingValue;
+        }
+    }
+    static set(key, value) {
+        sessionStorage.setItem(key, JSON.stringify(value));
+    }
+    static get(key) {
+        const value = sessionStorage.getItem(key);
+        return value ? JSON.parse(value) : null;
+    }
+    static remove(key) {
+        sessionStorage.removeItem(key);
+    }
+    static clear() {
+        sessionStorage.clear();
+    }
+    /** Instance methods to interact with this specific cookie */
+    update(value) {
+        this.value = value;
+        SessionStorage.set(this.name, value);
+    }
+    delete() {
+        this.value = null;
+        SessionStorage.remove(this.name);
+    }
+    getValue() { return this.value; }
+    getName() { return this.name; }
 }
 class HTMLElementCreator {
     superEl;
     currContainer;
     parentStack = [];
-    constructor(tag, attrs = {}) {
-        // If the tag is an HTMLElement, use it directly
+    constructor(tag, attrsOrPosition = {}) {
+        this.superEl = document.createDocumentFragment();
         if (tag instanceof HTMLElement) {
-            this.superEl = tag;
             this.currContainer = tag;
+            this.superEl.append(tag);
         }
         else {
-            // Otherwise, create a new element using the tag name
-            this.superEl = document.createElement(tag);
-            this.makeElement(this.superEl, attrs);
-            this.currContainer = this.superEl;
+            const el = document.createElement(tag);
+            this.makeElement(el, attrsOrPosition);
+            this.currContainer = el;
+            this.superEl.append(el);
         }
     }
     makeElement(el, attrs) {
         Object.entries(attrs).forEach(([key, value]) => {
             if (key === "text") {
-                el.innerText = value;
+                el.text(value);
             }
             else if (key === "html") {
-                el.innerHTML = value;
+                el.html(value);
             }
             else if (key === "class") {
                 if (typeof value === "string") {
@@ -380,10 +763,10 @@ class HTMLElementCreator {
             }
             else if (key === "style") {
                 let styles = "";
-                Object.entries(value).forEach(([key, value]) => {
-                    styles += `${toKebabCase(key)}: ${value}; `;
+                Object.entries(value).forEach(([styleKey, styleValue]) => {
+                    styles += `${toKebabCase(styleKey)}: ${styleValue}; `;
                 });
-                el.setAttribute("style", styles);
+                el.setAttribute("style", styles.trim());
             }
             else if (typeof value === "boolean") {
                 if (value)
@@ -391,7 +774,7 @@ class HTMLElementCreator {
                 else
                     el.removeAttribute(key);
             }
-            else if (value !== undefined) {
+            else if (value !== undefined && value !== null) {
                 el.setAttribute(key, value);
             }
         });
@@ -412,17 +795,28 @@ class HTMLElementCreator {
     }
     up() {
         const prev = this.parentStack.pop();
-        this.currContainer = prev ?? this.superEl;
+        if (prev) {
+            this.currContainer = prev;
+        }
         return this;
     }
     append(to) {
-        to.appendChild(this.superEl);
+        const target = typeof to === "string" ? document.querySelector(to) : to;
+        if (target instanceof HTMLElement) {
+            target.append(this.superEl);
+        }
+    }
+    prepend(to) {
+        const target = typeof to === "string" ? document.querySelector(to) : to;
+        if (target instanceof HTMLElement) {
+            target.prepend(this.superEl);
+        }
     }
     get element() {
-        return this.superEl;
+        return this.currContainer;
     }
 }
-class TimeInternal {
+class Time {
     hours;
     minutes;
     seconds;
@@ -488,14 +882,14 @@ class TimeInternal {
     }
     // Returns the time in milliseconds since the start of the day
     static at(hours, minutes, seconds, milliseconds) {
-        return new TimeInternal(hours, minutes, seconds, milliseconds).getTime();
+        return new Time(hours, minutes, seconds, milliseconds).getTime();
     }
     sync() {
-        return new TimeInternal();
+        return new Time();
     }
     // Static: Return current time as a Time object
     static now() {
-        return new TimeInternal().getTime();
+        return new Time().getTime();
     }
     toString() {
         return `${this.hours.toString().padStart(2, '0')}:${this.minutes.toString().padStart(2, '0')}:${this.seconds.toString().padStart(2, '0')}`;
@@ -511,16 +905,16 @@ class TimeInternal {
         return new Date(years, months, days, this.hours, this.minutes, this.seconds, this.milliseconds);
     }
     static fromDate(date) {
-        return new TimeInternal(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+        return new Time(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
     }
     // Arithmetic operations
     addMilliseconds(ms) {
         const totalMilliseconds = this.getTime() + ms;
-        return TimeInternal.fromMilliseconds(totalMilliseconds);
+        return Time.fromMilliseconds(totalMilliseconds);
     }
     subtractMilliseconds(ms) {
         const totalMilliseconds = this.getTime() - ms;
-        return TimeInternal.fromMilliseconds(totalMilliseconds);
+        return Time.fromMilliseconds(totalMilliseconds);
     }
     addSeconds(seconds) {
         return this.addMilliseconds(seconds * 1000);
@@ -537,7 +931,7 @@ class TimeInternal {
         const minutes = Math.floor(ms / 60000) % 60;
         const seconds = Math.floor(ms / 1000) % 60;
         const milliseconds = ms % 1000;
-        return new TimeInternal(hours, minutes, seconds, milliseconds);
+        return new Time(hours, minutes, seconds, milliseconds);
     }
     // Parsing
     static fromString(timeString) {
@@ -547,7 +941,7 @@ class TimeInternal {
             const minutes = parseInt(match[2], 10);
             const seconds = parseInt(match[3] ?? "0", 10);
             const milliseconds = parseInt(match[4] ?? "0", 10);
-            return new TimeInternal(hours, minutes, seconds, milliseconds);
+            return new Time(hours, minutes, seconds, milliseconds);
         }
         throw new Error("Invalid time string format.");
     }
@@ -558,7 +952,7 @@ class TimeInternal {
             const minutes = parseInt(match[2], 10);
             const seconds = parseInt(match[3], 10);
             const milliseconds = parseInt(match[4], 10);
-            return new TimeInternal(hours, minutes, seconds, milliseconds);
+            return new Time(hours, minutes, seconds, milliseconds);
         }
         throw new Error("Invalid ISO string format.");
     }
@@ -589,12 +983,99 @@ class TimeInternal {
         return first.compare(other) === 0;
     }
 }
+class Sequence {
+    tasks;
+    finalResult;
+    errorHandler = (error) => { throw new Error(error); };
+    constructor(tasks = []) {
+        this.tasks = tasks;
+    }
+    // Executes the sequence, passing up to 3 initial arguments to the first task
+    async execute(...args) {
+        try {
+            const result = await this.tasks.reduce((prev, task) => prev.then((result) => task(result)), Promise.resolve(args));
+            return this.finalResult = result;
+        }
+        catch (error) {
+            return this.errorHandler(error);
+        }
+    }
+    result(callback) {
+        if (callback) {
+            return callback(this.finalResult);
+        }
+        return this.finalResult;
+    }
+    error(callback) {
+        this.errorHandler = callback;
+        return this;
+    }
+    // Static methods to create new sequences
+    // Executes all tasks with the same arguments
+    static of(...functions) {
+        const tasks = [];
+        for (const fn of functions) {
+            if (fn instanceof Sequence) {
+                // Add the sequence's tasks
+                tasks.push(...fn.tasks);
+            }
+            else if (typeof fn === "function") {
+                // Add standalone functions
+                tasks.push(fn);
+            }
+            else {
+                throw new Error("Invalid argument: Must be a function or Sequence");
+            }
+        }
+        return new Sequence(tasks);
+    }
+    // Executes tasks sequentially, passing the result of one to the next
+    static chain(...functions) {
+        return new Sequence(functions);
+    }
+    static parallel(...functions) {
+        return new Sequence([() => Promise.all(functions.map((fn) => fn()))]);
+    }
+    static race(...functions) {
+        return new Sequence([() => Promise.race(functions.map((fn) => fn()))]);
+    }
+    static retry(retries, task, delay = 0) {
+        return new Sequence([
+            () => new Promise((resolve, reject) => {
+                const attempt = (attemptNumber) => {
+                    task()
+                        .then(resolve)
+                        .catch((error) => {
+                        if (attemptNumber < retries) {
+                            setTimeout(() => attempt(attemptNumber + 1), delay);
+                        }
+                        else {
+                            reject(error);
+                        }
+                    });
+                };
+                attempt(0);
+            }),
+        ]);
+    }
+    // Instance methods for chaining
+    add(...functions) {
+        this.tasks.push(...functions);
+        return this;
+    }
+}
+// -------------------------------------------------------------------------------------------------
 //! Prototypes
-globalThis.bindShortcut = bindShortcut;
 globalThis.f = (iife) => iife();
-globalThis.LocalStorage = LocalStorageInternal;
-globalThis.Cookie = CookieInternal;
-globalThis.Time = TimeInternal;
+globalThis.createEventListener = createEventListener;
+globalThis.LocalStorage = LocalStorage;
+globalThis.SessionStorage = SessionStorage;
+globalThis.Cookie = Cookie;
+globalThis.Time = Time;
+/*! Unchecked */ globalThis.Sequence = Sequence;
+/*! Unchecked */ globalThis.optidom = new OptiDOM();
+globalThis.isEmpty = isEmpty;
+globalThis.type = type;
 globalThis.UnknownError = class extends Error {
     constructor(message) {
         super(message);
@@ -602,27 +1083,82 @@ globalThis.UnknownError = class extends Error {
         Object.setPrototypeOf(this, new.target.prototype);
     }
 };
+globalThis.NotImplementedError = class extends Error {
+    constructor(message) {
+        super(message ?? "Function not implimented yet.");
+        this.name = "NotImplementedError";
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+};
 Document.prototype.ready = ready;
-Document.prototype.elementCreator = elementCreator;
+/*! Not Working */ Document.prototype.leaving = leaving;
+Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 Date.at = atDate;
+Date.fromTime = fromTime;
 NodeList.prototype.addEventListener = addEventListenerEnum;
+NodeList.prototype.addClass = addClassList;
+NodeList.prototype.removeClass = removeClassList;
+NodeList.prototype.toggleClass = toggleClassList;
+NodeList.prototype.single = function () {
+    // If the NodeList has elements, return the first one, otherwise return null
+    return this.length > 0 ? this[0] : null;
+};
 HTMLCollection.prototype.addEventListener = addEventListenerEnum;
-EventTarget.prototype.addOnceListener = addOnceListener;
+HTMLCollection.prototype.addClass = addClassList;
+HTMLCollection.prototype.removeClass = removeClassList;
+HTMLCollection.prototype.toggleClass = toggleClassList;
+HTMLCollection.prototype.single = function () {
+    // If the collection has elements, return the first one, otherwise return null
+    return this.length > 0 ? this[0] : null;
+};
+EventTarget.prototype.addBoundListener = addBoundListener;
 EventTarget.prototype.addEventListeners = addEventListeners;
+Element.prototype.hasText = hasText;
+Element.prototype.text = text;
+Element.prototype.addClass = addClass;
+Element.prototype.removeClass = removeClass;
+Element.prototype.toggleClass = toggleClass;
+Element.prototype.hasClass = hasClass;
 HTMLElement.prototype.css = css;
-HTMLElement.prototype.createChildren = createChildren;
-HTMLElement.prototype.elementCreator = function () { return new HTMLElementCreator(this); };
-HTMLElement.prototype.change = change;
+HTMLElement.prototype.elementCreator = elementCreator;
+HTMLElement.prototype.tag = tag;
 HTMLElement.prototype.html = html;
-HTMLElement.prototype.text = text;
+HTMLElement.prototype.show = show;
+HTMLElement.prototype.hide = hide;
+/*! Not Working */ HTMLElement.prototype.toggle = toggle;
+// /*! Unchecked */ HTMLElement.prototype.fadeIn;
+// /*! Unchecked */ HTMLElement.prototype.fadeOut;
+// /*! Unchecked */ HTMLElement.prototype.fadeToggle;
+// /*! Unchecked */ HTMLElement.prototype.slideIn;
+// /*! Unchecked */ HTMLElement.prototype.slideOut;
+// /*! Unchecked */ HTMLElement.prototype.slideToggle;
+// /*! Unchecked */ HTMLElement.prototype.animate;
+/*! Unchecked */ HTMLFormElement.prototype.serialize = serialize;
 Node.prototype.getParent = getParent;
 Node.prototype.getAncestor = getAncestor;
-Node.prototype.getAncestorQuery = getAncestorQuery;
-//! Getters & Setters
+Node.prototype.getChildren = getChildren;
+Node.prototype.getSiblings = getSiblings;
+Node.prototype.querySelectAncestor = querySelectAncestor;
+Node.prototype.find = find;
+Node.prototype.findAll = findAll;
+Math.random = random;
+Object.clone = clone;
+Object.forEach = forEach;
+Number.prototype.repeat = repeat;
+JSON.parseFile = parseFile;
+Array.prototype.unique = unique;
+Array.prototype.chunk = chunk;
+String.prototype.remove = remove;
+String.prototype.removeAll = removeAll;
 defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
 defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
+defineGetter(HTMLElement.prototype, "visible", function () {
+    return this.css("visibility") !== "hidden"
+        ? this.css("display") !== "none"
+        : Number(this.css("opacity")) > 0;
+});
 export {};
