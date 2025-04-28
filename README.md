@@ -50,7 +50,7 @@ OptiDOM isn’t just another library — it's **seamlessly integrated into the b
 
   - `Date.at(...)` — *for millisecond timestamps*
 
-Window, JSON, DOMTokenList, and more are also extended where useful.
+And more!
 
 ## Installation
 
@@ -73,123 +73,54 @@ import 'optidom';
 ```
 Then you're good to go! OptiDOM will then automatically attack the functions to the javascript objects
 
-Here’s a basic example of how to use OptiDOM's features:
+Heres a list of all of the OptiDOM features:
 
-### Bind Shortcuts
-```js
-document.bindShortcut('ctrl+f', (event) => {
-  console.log('Ctrl + F was pressed');
-});
-```
+| **Class**                          | Name                           | Status         | Description/Notes                     |
+| ------------------------------ | ------------------------------ | -------------- | ------------------------------------- |
+| `global`                       | `f`                            | ✅             | Shortcut to immediately invoke an IIFE |
+| `global`                       | `createEventListener`          | ✅             | Shortcut for event binding             |
+| `global`                       | `LocalStorage`                 | ✅             | LocalStorage wrapper                   |
+| `global`                       | `SessionStorage`               | ✅             | SessionStorage wrapper                 |
+| `global`                       | `Cookie`                       | ✅             | Cookie wrapper                         |
+| `global`                       | `Time`                         | ✅             | Time utility class                     |
+| `global`                       | `Sequence`                     | ❗ Unchecked    | Sequence utility (unchecked)           |
+| `global`                       | `optidom`                      | ✅             | Main `OptiDOM` instance                |
+| `global`                       | `isEmpty`                      | ✅             | Utility to check if an object is empty |
+| `global`                       | `type`                         | ✅             | Utility to detect variable type        |
+| `global`                       | `UnknownError`                 | ✅             | Custom `UnknownError` class            |
+| `global`                       | `NotImplementedError`          | ✅             | Custom `NotImplementedError` class     |
+| `Document`                    | `ready`                        | ✅             | Runs when DOM is fully loaded         |
+| `Document`                    | `leaving`                      | ❗ Not Working | Runs when page is unloading           |
+| `Document`                    | `elementCreator`               | ✅             | Simplified element creation           |
+| `Document`                    | `bindShortcut`                 | ✅             | Bind key shortcuts                    |
+| `Document`                    | `css`                          | ✅             | Document-wide CSS control             |
+| `Document`                    | `$`, `$$`                      | ✅             | Query selector shortcuts              |
+| `Date`                        | `at`, `fromTime`               | ✅             | Parse or create date/time objects     |
+| `NodeList` / `HTMLCollection` | `addEventListener`             | ✅             | Bulk event listeners                  |
+|                               | `addClass`, `removeClass`, `toggleClass` | ✅   | Bulk class manipulation              |
+|                               | `single`                       | ✅             | Get first element or `null`           |
+| `EventTarget`                 | `addBoundListener`, `addEventListeners` | ✅    | Add multiple/bound event listeners   |
+| `Element`                     | `hasText`, `text`              | ✅             | Text utilities                       |
+|                               | `addClass`, `removeClass`, `toggleClass`, `hasClass` | ✅ | Class manipulation                 |
+| `HTMLElement`                 | `css`, `elementCreator`, `tag`, `html`, `show`, `hide` | ✅ | Full DOM utility |suite               |
+|                               | `toggle`                       | ❗ Not Working | Show/hide toggle                     |
+|                               | `fadeIn`, `fadeOut`, `fadeToggle`, `slideIn`, `slideOut`, `slideToggle`, `animate` | ❗ Unchecked | Animations (future support?)         |
+| `HTMLFormElement`             | `serialize`                    | ❗ Unchecked   | Serialize form fields                |
+| `Node`                        | `getParent`, `getAncestor`, `getChildren`, `getSiblings`, `querySelectAncestor`, `find`, `findAll` | ✅ | DOM traversal utilities             |
+| `Math`                        | `random`                       | ✅             | Random number utility (customized)   |
+| `Object`                      | `clone`, `forEach`             | ✅             | Clone objects, forEach on objects     |
+| `Number`                      | `repeat`                       | ✅             | Repeat operations for numbers         |
+| `JSON`                        | `parseFile`                    | ✅             | Parse JSON from a file (async/await)  |
+| `Array`                       | `unique`, `chunk`              | ✅             | Array de-duplicate and chunking       |
+| `String`                      | `remove`, `removeAll`          | ✅             | Remove substrings                     |
 
-### Element Methods
-```js
-const div = document.createElement('div');
 
-div.css({ color: 'red', fontSize: '16px' });
-div.text('Hello!');
-div.html("<p>Paragraph</p>");
-div.getParent().text("Im a parent!");
-div.getAncestor(2)?.text("Im an ancestor!");
+### 📏 Window/HTMLElement Property Extensions
 
-// WARNING: Unstable, changes the HTML tag
-div.tag("a").href = "https://example.com";
-
-```
-
-### NodeList Listener
-```js
-const buttons = document.querySelectorAll('button');
-
-buttons.addEventListener('click', () => {
-  alert('Button clicked');
-});
-```
-
-### Once Listener
-```js
-const element = document.getElementById('myButton');
-
-element.addBoundListener('click', () => {
-  alert('This will only trigger once!');
-});
-```
-
-### Date Constructor for Milliseconds
-```js
-const timestamp = Date.at(2025, 3, 11, 14, 30, 0, 0);
-console.log(new Date(timestamp));
-```
-
-## HTMLCreator
-
-```js
-const parent = document.getElementById("parent");
-
-const creator = new HTMLElementCreator("div");
-
-creator.el('div', { id: 'myDiv', class: 'container' });
-creator.element.textContent = 'Hello, world!';
-creator.append(document.getElementById("parent"));
-
-// AND
-
-const parent = document.getElementById("parent");
-
-document.elementcreator("div")
-  .el('div', { id: 'myDiv', class: 'container' })
-  .append(parent)
-```
-
-## Time class
-```js
-// Now
-const time = new Time();
-// At a specific time
-const timeAt = new Time(14, 30, 15, 250);
-// From date
-const timeDate = new Time(new Date());
-
-time.subtractMiliseconds(6000);
-timeAt.getTime();
-console.log(timeDate.toString());
-console.log(time.compare(timeAt)); // 1 / 0 / -1
-console.log(time.isBefore(timeDate));
-console.log(time.isAfter(timeAt));
-
-const parsed = Time.fromString("23:59:59.999");
-console.log(parsed.toISOString()); // "T23:59:59.999Z"
-
-const isoParsed = Time.fromISOString("T06:30:00.000Z");
-console.log(isoParsed.toString()); // "06:30:00"
-
-```
-
-### Document CSS
-```js
-document.css("body", {
-  backgroundColor: "red",
-  padding: 0,
-})
-```
-
-### document.querySelector shorthand
-```js
-document.$("li.list#second")
-
-// same as
-
-document.querySelector("li.list#second");
-```
-
-### Typed Functions
-
-OptiDOM also provides typed versions of basic JavaScript functions:
- - `JSON.parse`
- - `document.getElementById`
- - `document.getElementsByClassName`
- - `document.querySelector`
- - `document.querySelectorAll`
+| Object                        | Getter / Setter                | Status         | Description/Notes                    |
+| ----------------------------- | ------------------------------ | -------------- | ------------------------------------ |
+| `Window`                      | `width`, `height`              | ✅             | Window size getters                  |
+| `HTMLElement`                 | `visible`                      | ✅             | Visibility check for elements        |
 
 
 ## Contributing
