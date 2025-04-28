@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 /* eslint-disable func-style */
 function defineProperty(object, prop, getter, setter) {
     Object.defineProperty(object, prop, {
@@ -202,7 +211,7 @@ const documentCss = function (element, object) {
             newStyles[kebab] = val.toString();
         }
     }
-    const mergedStyles = { ...existingStyles, ...newStyles };
+    const mergedStyles = Object.assign(Object.assign({}, existingStyles), newStyles);
     const styleString = Object.entries(mergedStyles)
         .map(([prop, val]) => `${prop}: ${val};`)
         .join(" ");
@@ -230,7 +239,7 @@ const getAncestor = function (level) {
 };
 const querySelectAncestor = function (selector) {
     const element = document.querySelector(selector);
-    if (element?.contains(this)) {
+    if (element === null || element === void 0 ? void 0 : element.contains(this)) {
         return element;
     }
     return null;
@@ -312,7 +321,7 @@ const tag = function (newTag) {
             try {
                 newElement[key] = this[key];
             }
-            catch {
+            catch (_a) {
                 // Some props might be readonly — safely ignore
             }
         }
@@ -324,17 +333,18 @@ const html = function (input) {
     return input !== undefined ? (this.innerHTML = input) : this.innerHTML;
 };
 const text = function (text, ...input) {
+    var _a, _b;
     // If text is provided, update the textContent
     if (text !== undefined) {
         input.unshift(text); // Add the text parameter to the beginning of the input array
         const joined = input.join(" "); // Join all the strings with a space
         // Replace "textContent" if it's found in the joined string (optional logic)
         this.textContent = joined.includes("textContent")
-            ? joined.replace("textContent", this.textContent ?? "")
+            ? joined.replace("textContent", (_a = this.textContent) !== null && _a !== void 0 ? _a : "")
             : joined;
     }
     // Return the current textContent if no arguments are passed
-    return this.textContent ?? "";
+    return (_b = this.textContent) !== null && _b !== void 0 ? _b : "";
 };
 const $ = function (selector) {
     return document.querySelector(selector);
@@ -534,46 +544,50 @@ const forEach = function (object, iterator) {
         }
     }
 };
-const parseFile = async function (file, receiver) {
-    const fileContent = await fetch(file).then(res => res.json());
-    if (!receiver) {
-        return fileContent;
-    }
-    return receiver(fileContent);
+const parseFile = function (file, receiver) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const fileContent = yield fetch(file).then(res => res.json());
+        if (!receiver) {
+            return fileContent;
+        }
+        return receiver(fileContent);
+    });
 };
 class OptiDOM {
-    deprecatedMigration = {
-        // Node interface
-        "Node.parentElement": "Node.getParent",
-        "Node.parentNode": "Node.getParent",
-        "Node.querySelector": "Node.find",
-        "Node.querySelectorAll": "Node.find",
-        "Node.textContent": "Element.text",
-        // Document interface
-        "Document.cookie": "Cookie",
-        "Document.addEventListener (DOMContentLoaded)": "document.ready",
-        "Document.addEventListener (load)": "document.ready",
-        "Document.addEventListener (unload)": "document.leaving",
-        // Window interface
-        "Window.innerHeight": "window.height",
-        "Window.innerWidth": "window.width",
-        "Window.addEventListener (DOMContentLoaded)": "document.ready",
-        "Window.addEventListener (beforeunload)": "document.leaving",
-        "Window.addEventListener (unload)": "document.leaving",
-        // HTMLElement interface
-        "HTMLElement.innerHTML": "HTMLElement.html",
-        "HTMLElement.innerText": "Node.text",
-        // Storage related
-        "localStorage": "LocalStorage",
-        "sessionStorage": "SessionStorage"
-    };
-    // Define the objects that will be patched (can be extended as needed)
-    objectMap = {
-        Node: Node.prototype,
-        Document: Document.prototype,
-        Window: Window.prototype,
-        HTMLElement: HTMLElement.prototype
-    };
+    constructor() {
+        this.deprecatedMigration = {
+            // Node interface
+            "Node.parentElement": "Node.getParent",
+            "Node.parentNode": "Node.getParent",
+            "Node.querySelector": "Node.find",
+            "Node.querySelectorAll": "Node.find",
+            "Node.textContent": "Element.text",
+            // Document interface
+            "Document.cookie": "Cookie",
+            "Document.addEventListener (DOMContentLoaded)": "document.ready",
+            "Document.addEventListener (load)": "document.ready",
+            "Document.addEventListener (unload)": "document.leaving",
+            // Window interface
+            "Window.innerHeight": "window.height",
+            "Window.innerWidth": "window.width",
+            "Window.addEventListener (DOMContentLoaded)": "document.ready",
+            "Window.addEventListener (beforeunload)": "document.leaving",
+            "Window.addEventListener (unload)": "document.leaving",
+            // HTMLElement interface
+            "HTMLElement.innerHTML": "HTMLElement.html",
+            "HTMLElement.innerText": "Node.text",
+            // Storage related
+            "localStorage": "LocalStorage",
+            "sessionStorage": "SessionStorage"
+        };
+        // Define the objects that will be patched (can be extended as needed)
+        this.objectMap = {
+            Node: Node.prototype,
+            Document: Document.prototype,
+            Window: Window.prototype,
+            HTMLElement: HTMLElement.prototype
+        };
+    }
     // Automatically deprecate a function and recommend a replacement
     deprecate(funcName, force = false) {
         const migration = this.deprecatedMigration[funcName];
@@ -606,10 +620,6 @@ class OptiDOM {
 }
 // Cookie Class
 class Cookie {
-    name;
-    value;
-    expiry;
-    path;
     constructor(name, valueIfNotExist = null, days = 7, path = '/') {
         this.name = name;
         this.expiry = days;
@@ -651,8 +661,6 @@ class Cookie {
 }
 // Storage Class
 class LocalStorage {
-    name;
-    value;
     constructor(name, valueIfNotExist = null) {
         this.name = name;
         const existingValue = LocalStorage.get(name);
@@ -690,8 +698,6 @@ class LocalStorage {
     getName() { return this.name; }
 }
 class SessionStorage {
-    name;
-    value;
     constructor(name, valueIfNotExist = null) {
         this.name = name;
         const existingValue = SessionStorage.get(name);
@@ -729,10 +735,8 @@ class SessionStorage {
     getName() { return this.name; }
 }
 class HTMLElementCreator {
-    superEl;
-    currContainer;
-    parentStack = [];
     constructor(tag, attrsOrPosition = {}) {
+        this.parentStack = [];
         this.superEl = document.createDocumentFragment();
         if (tag instanceof HTMLElement) {
             this.currContainer = tag;
@@ -817,10 +821,6 @@ class HTMLElementCreator {
     }
 }
 class Time {
-    hours;
-    minutes;
-    seconds;
-    milliseconds;
     constructor(hours, minutes, seconds, milliseconds) {
         if (hours instanceof Date) {
             this.hours = hours.getHours();
@@ -830,10 +830,10 @@ class Time {
         }
         else {
             const now = new Date();
-            this.hours = hours ?? now.getHours();
-            this.minutes = minutes ?? now.getMinutes();
-            this.seconds = seconds ?? now.getSeconds();
-            this.milliseconds = milliseconds ?? now.getMilliseconds();
+            this.hours = hours !== null && hours !== void 0 ? hours : now.getHours();
+            this.minutes = minutes !== null && minutes !== void 0 ? minutes : now.getMinutes();
+            this.seconds = seconds !== null && seconds !== void 0 ? seconds : now.getSeconds();
+            this.milliseconds = milliseconds !== null && milliseconds !== void 0 ? milliseconds : now.getMilliseconds();
         }
         this.validateTime();
     }
@@ -935,12 +935,13 @@ class Time {
     }
     // Parsing
     static fromString(timeString) {
+        var _a, _b;
         const match = timeString.match(/^(\d{2}):(\d{2})(?::(\d{2}))?(?:\.(\d{3}))?$/);
         if (match) {
             const hours = parseInt(match[1], 10);
             const minutes = parseInt(match[2], 10);
-            const seconds = parseInt(match[3] ?? "0", 10);
-            const milliseconds = parseInt(match[4] ?? "0", 10);
+            const seconds = parseInt((_a = match[3]) !== null && _a !== void 0 ? _a : "0", 10);
+            const milliseconds = parseInt((_b = match[4]) !== null && _b !== void 0 ? _b : "0", 10);
             return new Time(hours, minutes, seconds, milliseconds);
         }
         throw new Error("Invalid time string format.");
@@ -984,21 +985,21 @@ class Time {
     }
 }
 class Sequence {
-    tasks;
-    finalResult;
-    errorHandler = (error) => { throw new Error(error); };
     constructor(tasks = []) {
+        this.errorHandler = (error) => { throw new Error(error); };
         this.tasks = tasks;
     }
     // Executes the sequence, passing up to 3 initial arguments to the first task
-    async execute(...args) {
-        try {
-            const result = await this.tasks.reduce((prev, task) => prev.then((result) => task(result)), Promise.resolve(args));
-            return this.finalResult = result;
-        }
-        catch (error) {
-            return this.errorHandler(error);
-        }
+    execute(...args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const result = yield this.tasks.reduce((prev, task) => prev.then((result) => task(result)), Promise.resolve(args));
+                return this.finalResult = result;
+            }
+            catch (error) {
+                return this.errorHandler(error);
+            }
+        });
     }
     result(callback) {
         if (callback) {
@@ -1085,7 +1086,7 @@ globalThis.UnknownError = class extends Error {
 };
 globalThis.NotImplementedError = class extends Error {
     constructor(message) {
-        super(message ?? "Function not implimented yet.");
+        super(message !== null && message !== void 0 ? message : "Function not implimented yet.");
         this.name = "NotImplementedError";
         Object.setPrototypeOf(this, new.target.prototype);
     }

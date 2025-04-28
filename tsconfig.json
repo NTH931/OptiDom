@@ -1,25 +1,25 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES6",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "src/",
     "outDir": "dist/",
     "types": [
-      "./src/types/optidom.d.ts",
-      "./src/types/optidom.lib.d.ts",
-      "./src/types/deprecation.d.ts",
-      "./src/types/alterations.d.ts",
-      "./src/types/classes.d.ts"
+      "./types/optidom.d.ts",
+      "./types/optidom.lib.d.ts",
+      "./types/deprecation.d.ts",
+      "./types/alterations.d.ts",
+      "./types/classes.d.ts"
     ],
     "lib": ["DOM", "ES2020", "ESNext"]
   },
   "include": [
+    "types/**/*",
     "src/**/*",
     "types/**/*"
-  ]
+, "src/types" , "types" ]
 }

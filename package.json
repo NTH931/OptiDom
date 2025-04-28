@@ -1,10 +1,10 @@
 {
   "name": "optidom",
   "type": "module",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Lightweight DOM manipulation, styling, and utility extension for native JavaScript objects — without wrappers.",
   "main": "dist/optidom.js",
-  "types": "src/types/optidom.lib.d.ts",
+  "types": "dist/types/optidom.lib.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/NTH931/optidom.git"

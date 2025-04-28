@@ -1,5 +1,10 @@
 # OptiDOM
 
+[![npm version](https://img.shields.io/npm/v/optidom)](https://www.npmjs.com/package/optidom)
+![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)
+[![bundlephobia](https://img.shields.io/bundlephobia/minzip/optidom)](https://bundlephobia.com/result?p=optidom)
+[![issues](https://img.shields.io/github/issues/NTH931/optidom)](https://github.com/NTH931/optidom/issues)
+
 *No specific imports. No wrappers. Just power where it belongs — right on your native objects.*
 
 **OptiDOM** is a lightweight JavaScript DOM manipulation library that provides an optimized API for creating, managing, and updating HTML elements efficiently. It aims to provide a simple and intuitive way to work with DOM elements.
