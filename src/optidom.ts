@@ -70,14 +70,14 @@ const ready = function (callback: (this: Document, ev: Event) => any) {
   document.addEventListener("DOMContentLoaded", callback);
 };
 
-const leaving = function(callback: (this: Document, ev: Event) => any): void {
+const leaving = function (callback: (this: Document, ev: Event) => any): void {
   document.addEventListener("unload", (e) => callback.call(document, e));
 };
 
-const addEventListenerEnum = function<T extends EventTarget>(
+const addEventListenerEnum = function <T extends EventTarget>(
   this: Iterable<T>,
-  type: keyof EventMapOf<T>, 
-  listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any, 
+  type: keyof EventMapOf<T>,
+  listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any,
   options?: boolean | AddEventListenerOptions
 ): void {
   for (const el of this) {
@@ -87,7 +87,7 @@ const addEventListenerEnum = function<T extends EventTarget>(
   }
 };
 
-const addBoundListener = function<T extends EventTarget, K extends keyof EventMapOf<T>>(
+const addBoundListener = function <T extends EventTarget, K extends keyof EventMapOf<T>>(
   this: T,
   type: K,
   listener: (this: T, e: EventMapOf<T>[K]) => void,
@@ -110,7 +110,7 @@ const addBoundListener = function<T extends EventTarget, K extends keyof EventMa
   this.addEventListener(type as string, onceListener as EventListener, options);
 };
 
-const hasText = function(this: Element, text: string | RegExp): boolean {
+const hasText = function (this: Element, text: string | RegExp): boolean {
   if (typeof text === "string") {
     return this.text().includes(text);
   } else {
@@ -118,37 +118,37 @@ const hasText = function(this: Element, text: string | RegExp): boolean {
   }
 };
 
-const addClassList = function<T extends Element>(this: Iterable<T>, elClass: string): void {
+const addClassList = function <T extends Element>(this: Iterable<T>, elClass: string): void {
   for (const el of this) {
     el.addClass(elClass);
   }
 };
 
-const removeClassList = function<T extends Element>(this: Iterable<T>, elClass: string): void {
+const removeClassList = function <T extends Element>(this: Iterable<T>, elClass: string): void {
   for (const el of this) {
     el.removeClass(elClass);
   }
 };
 
-const toggleClassList = function<T extends Element>(this: Iterable<T>, elClass: string): void {
+const toggleClassList = function <T extends Element>(this: Iterable<T>, elClass: string): void {
   for (const el of this) {
     el.toggleClass(elClass);
   }
 };
 
-const addClass = function(this: Element, elClass: string): void {
+const addClass = function (this: Element, elClass: string): void {
   this.classList.add(elClass);
 };
 
-const removeClass = function(this: Element, elClass: string): void {
+const removeClass = function (this: Element, elClass: string): void {
   this.classList.remove(elClass);
 };
 
-const toggleClass = function(this: Element, elClass: string): void {
+const toggleClass = function (this: Element, elClass: string): void {
   this.classList.toggle(elClass);
 };
 
-const hasClass = function(this: Element, elClass: string): boolean {
+const hasClass = function (this: Element, elClass: string): boolean {
   return this.classList.contains(elClass);
 };
 
@@ -257,7 +257,7 @@ const documentCss = function (
   // Convert camelCase to kebab-case
   const newStyles: StringRecord<string> = {};
   for (const [prop, val] of Object.entries(object)) {
-    if (val !== null && val !==  undefined) {
+    if (val !== null && val !== undefined) {
       const kebab = prop.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
       newStyles[kebab] = val.toString();
     }
@@ -283,7 +283,7 @@ const getParent = function (this: Node): Node | null {
   return this.parentElement;
 };
 
-const getAncestor = function(this: Node, level: number): Node | null {
+const getAncestor = function (this: Node, level: number): Node | null {
   let ancestor: Node = this;
 
   for (let i = 0; i < level; i++) {
@@ -416,7 +416,7 @@ const text = function (this: Element, text?: string, ...input: string[]): string
   if (text !== undefined) {
     input.unshift(text); // Add the text parameter to the beginning of the input array
     const joined = input.join(" "); // Join all the strings with a space
-    
+
     // Replace "textContent" if it's found in the joined string (optional logic)
     this.textContent = joined.includes("textContent")
       ? joined.replace("textContent", this.textContent ?? "")
@@ -427,11 +427,11 @@ const text = function (this: Element, text?: string, ...input: string[]): string
   return this.textContent ?? "";
 };
 
-const $ = function(selector: string) {
+const $ = function (selector: string) {
   return document.querySelector(selector);
 };
 
-const $$ = function(selector: string) {
+const $$ = function (selector: string) {
   return document.querySelectorAll(selector);
 };
 
@@ -458,19 +458,19 @@ const toggle = function (this: HTMLElement) {
   }
 };
 
-const find = function(this: Node, selector: string): Node | null {
+const find = function (this: Node, selector: string): Node | null {
   return this.querySelector(selector); // Returns a single Element or null
 };
 
-const findAll = function(this: Node, selector: string): NodeListOf<Element> {
+const findAll = function (this: Node, selector: string): NodeListOf<Element> {
   return this.querySelectorAll(selector); // Returns a single Element or null
 };
 
-const getChildren = function(this: Node): NodeListOf<ChildNode> {
+const getChildren = function (this: Node): NodeListOf<ChildNode> {
   return this.childNodes;
 };
 
-const getSiblings = function(this: Node, inclusive?: boolean): Node[] {
+const getSiblings = function (this: Node, inclusive?: boolean): Node[] {
   const siblings = Array.from(this.parentNode!.childNodes as NodeListOf<Node>);
   if (inclusive) {
     return siblings; // Include current node as part of siblings
@@ -498,7 +498,7 @@ const serialize = function (this: HTMLFormElement): string {
     .join('&'); // Join the array into a single string, separated by '&'
 };
 
-const clone = function<T>(object: T, deep?: boolean): T {
+const clone = function <T>(object: T, deep?: boolean): T {
   const shallowClone = (): T =>
     Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 
@@ -545,11 +545,11 @@ const repeat = function (this: number, iterator: (i: number) => any): void {
   }
 };
 
-const unique = function<T>(this: T[]): T[] {
+const unique = function <T>(this: T[]): T[] {
   return [...new Set(this)];
 };
 
-const chunk = function<T>(this: T[], chunkSize: number): T[][] {
+const chunk = function <T>(this: T[], chunkSize: number): T[][] {
   if (chunkSize <= 0) throw new TypeError("`chunkSize` cannot be a number below 1");
 
   const newArr: T[][] = [];
@@ -571,11 +571,11 @@ const chunk = function<T>(this: T[], chunkSize: number): T[][] {
   return newArr;
 };
 
-const remove = function(this: string, finder: string | RegExp): string {
+const remove = function (this: string, finder: string | RegExp): string {
   return this.replace(finder, "");
 };
 
-const removeAll = function(this: string, finder: string | RegExp): string {
+const removeAll = function (this: string, finder: string | RegExp): string {
   if (finder instanceof RegExp) {
     if (!finder.flags.includes("g")) {
       finder = new RegExp(finder.source, finder.flags + "g");
@@ -584,15 +584,15 @@ const removeAll = function(this: string, finder: string | RegExp): string {
   return this.replaceAll(finder, "");
 };
 
-const elementCreator = function (this: HTMLElement) { 
+const elementCreator = function (this: HTMLElement) {
   return new HTMLElementCreator(this);
 };
 
-const elementCreatorDocument = function (superEl: keyof HTMLElementTagNameMap, attrs: HTMLAttrs) { 
+const elementCreatorDocument = function (superEl: keyof HTMLElementTagNameMap, attrs: HTMLAttrs) {
   return new HTMLElementCreator(superEl, attrs);
 };
 
-const type = function(val: any): string {
+const type = function (val: any): string {
   if (val === null) return "null";
   if (val === undefined) return "undefined";
 
@@ -636,7 +636,7 @@ function isEmpty(val: any): boolean {
 }
 
 function createEventListener<T extends AnyFunc[]>(
-  triggers: [...T], 
+  triggers: [...T],
   callback: (...results: CallbackResult<T>) => void
 ): void {
   const originals = triggers.map(fn => fn);
@@ -664,7 +664,7 @@ function toKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-const forEach = function<T>(object: T, iterator: (key: keyof T, value: T[keyof T]) => any): void {
+const forEach = function <T>(object: T, iterator: (key: keyof T, value: T[keyof T]) => any): void {
   for (const key in object) {
     if (Object.prototype.hasOwnProperty.call(object, key)) {
       iterator(key, object[key]);
@@ -672,7 +672,29 @@ const forEach = function<T>(object: T, iterator: (key: keyof T, value: T[keyof T
   }
 };
 
-const parseFile = async function<R = any, T = R>(
+const createTree = function createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
+  const el = document.createElement(node.tag);
+
+  if (node.class) el.className = node.class;
+  if (node.text) el.textContent = node.text;
+  if (node.html) el.innerHTML = node.html;
+
+  if (node.attrs) {
+    for (const [key, value] of Object.entries(node.attrs)) {
+      el.setAttribute(key, value);
+    }
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      el.appendChild(createTree(child));
+    }
+  }
+
+  return el;
+};
+
+const parseFile = async function <R = any, T = R>(
   file: string,
   receiver?: (content: T) => R
 ): Promise<R> {
@@ -765,32 +787,32 @@ class Cookie {
   private path: string;
 
   public constructor(name: string, valueIfNotExist: string | null = null, days: number = 7, path: string = '/') {
-      this.name = name;
-      this.expiry = days;
-      this.path = path;
+    this.name = name;
+    this.expiry = days;
+    this.path = path;
 
-      const existingValue = Cookie.get(name);
-      if (existingValue === null && valueIfNotExist !== null) {
-          Cookie.set(name, valueIfNotExist, days, path);
-          this.value = valueIfNotExist;
-      } else {
-          this.value = existingValue;
-      }
+    const existingValue = Cookie.get(name);
+    if (existingValue === null && valueIfNotExist !== null) {
+      Cookie.set(name, valueIfNotExist, days, path);
+      this.value = valueIfNotExist;
+    } else {
+      this.value = existingValue;
+    }
   }
 
   public static set(name: string, value: string, days: number = 7, path: string = '/'): void {
-      const date = new Date();
-      date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-      document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=${path}`;
+    const date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=${path}`;
   }
 
   public static get(name: string): string | null {
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? decodeURIComponent(match[2]) : null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : null;
   }
 
   public static delete(name: string, path: string = '/'): void {
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${path}`;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${path}`;
   }
 
   /** Instance methods to interact with this specific cookie */
@@ -1061,9 +1083,9 @@ class Time {
   // Returns the time in milliseconds since the start of the day
   public getTime(): number {
     return (
-      this.hours * 3600000 + 
-      this.minutes * 60000 + 
-      this.seconds * 1000 + 
+      this.hours * 3600000 +
+      this.minutes * 60000 +
+      this.seconds * 1000 +
       this.milliseconds
     );
   }
@@ -1163,7 +1185,7 @@ class Time {
   public compare(other: Time): number {
     const currentTime = this.getTime();
     const otherTime = other.getTime();
-  
+
     if (currentTime < otherTime) {
       return -1;
     } else if (currentTime > otherTime) {
@@ -1172,15 +1194,15 @@ class Time {
       return 0;
     }
   }
-  
+
   public isBefore(other: Time): boolean {
     return this.compare(other) === -1;
   }
-  
+
   public isAfter(other: Time): boolean {
     return this.compare(other) === 1;
   }
-  
+
   public equals(other: Time): boolean {
     return this.compare(other) === 0;
   }
@@ -1214,11 +1236,11 @@ class Sequence {
 
   result(): any;
   result(callback: (result: unknown) => any): any;
-  result(callback?: (result: unknown) => any): typeof this.finalResult { 
+  result(callback?: (result: unknown) => any): typeof this.finalResult {
     if (callback) {
       return callback(this.finalResult);
     }
-    return this.finalResult; 
+    return this.finalResult;
   }
 
   error(callback: (error: any) => any): this {
@@ -1231,7 +1253,7 @@ class Sequence {
   // Executes all tasks with the same arguments
   static of(...functions: (((...args: any[]) => any) | Sequence)[]): Sequence {
     const tasks: ((...args: any[]) => any)[] = [];
-  
+
     for (const fn of functions) {
       if (fn instanceof Sequence) {
         // Add the sequence's tasks
@@ -1243,7 +1265,7 @@ class Sequence {
         throw new Error("Invalid argument: Must be a function or Sequence");
       }
     }
-  
+
     return new Sequence(tasks);
   }
 
@@ -1322,6 +1344,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
+/*! Unchecked */ Document.prototype.createTree = createTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 
@@ -1333,7 +1356,7 @@ NodeList.prototype.addEventListener = addEventListenerEnum;
 NodeList.prototype.addClass = addClassList;
 NodeList.prototype.removeClass = removeClassList;
 NodeList.prototype.toggleClass = toggleClassList;
-NodeList.prototype.single = function() {
+NodeList.prototype.single = function () {
   // If the NodeList has elements, return the first one, otherwise return null
   return this.length > 0 ? this[0] : null;
 };
@@ -1342,7 +1365,7 @@ HTMLCollection.prototype.addEventListener = addEventListenerEnum;
 HTMLCollection.prototype.addClass = addClassList;
 HTMLCollection.prototype.removeClass = removeClassList;
 HTMLCollection.prototype.toggleClass = toggleClassList;
-HTMLCollection.prototype.single = function() {
+HTMLCollection.prototype.single = function () {
   // If the collection has elements, return the first one, otherwise return null
   return this.length > 0 ? this[0] : null;
 };
@@ -1359,7 +1382,7 @@ Element.prototype.hasClass = hasClass;
 
 HTMLElement.prototype.css = css;
 HTMLElement.prototype.elementCreator = elementCreator;
-HTMLElement.prototype.tag = tag;                    
+HTMLElement.prototype.tag = tag;
 HTMLElement.prototype.html = html;
 HTMLElement.prototype.show = show;
 HTMLElement.prototype.hide = hide;
@@ -1402,8 +1425,8 @@ String.prototype.removeAll = removeAll;
 defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
 defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
 
-defineGetter(HTMLElement.prototype, "visible", function(this: HTMLElement) { 
-  return this.css("visibility") !== "hidden" 
-    ? this.css("display") !== "none" 
+defineGetter(HTMLElement.prototype, "visible", function (this: HTMLElement) {
+  return this.css("visibility") !== "hidden"
+    ? this.css("display") !== "none"
     : Number(this.css("opacity")) > 0;
 });

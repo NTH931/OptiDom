@@ -121,6 +121,34 @@ interface Document {
    * 
    */
   elementCreator(superEl: keyof HTMLElementTagNameMap, attrs: HTMLAttrs): HTMLElementCreator;
+
+  /**
+   * Creates an element tree to create trees of HTML
+   * @optidom
+   * @param node The html element(s)
+   * @example
+   * const content = Elements.createTree({
+   *   tag: "div",
+   *   class: "current-class",
+   *   children: [
+   *     {
+   *       tag: "div",
+   *       class: "class-name",
+   *       children: [
+   *         {
+   *           tag: "a",
+   *           attrs: {
+   *             href: "https://example.com",
+   *             target: "_blank",
+   *           },
+   *           text: "To example.com",
+   *         }
+   *       ]
+   *     }
+   *   ]
+   * });
+   */
+  createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag>;
 }
 
 interface Window {

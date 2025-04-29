@@ -1,7 +1,7 @@
 {
   "name": "optidom",
   "type": "module",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Lightweight DOM manipulation, styling, and utility extension for native JavaScript objects — without wrappers.",
   "main": "dist/optidom.js",
   "types": "dist/types/optidom.lib.d.ts",

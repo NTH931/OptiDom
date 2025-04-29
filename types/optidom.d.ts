@@ -6,7 +6,9 @@ type StringRecord<T> = Record<string, T>;
 
 type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
 
-type HTMLElementOf<T extends keyof HTMLElementTagNameMap> = HTMLElementTagNameMap[T];
+type HTMLTag = keyof HTMLElementTagNameMap;
+
+type HTMLElementOf<T extends HTMLTag> = HTMLElementTagNameMap[T];
 type SVGElementOf<T extends keyof SVGElementTagNameMap> = SVGElementTagNameMap[T];
 type MathMLElementOf<T extends keyof MathMLElementTagNameMap> = MathMLElementTagNameMap[T];
 
@@ -168,6 +170,18 @@ type HTMLAttrs = {
   class?: string | string[];
   style?: { [key: string]: string };
   [key: string]: any 
+};
+
+/**
+ * @optidom
+ */
+type ElementNode<T extends HTMLTag> = {
+  tag: T;
+  class?: string;
+  text?: string;
+  html?: string;
+  attrs?: Record<string, string>;
+  children?: ElementNode[];
 };
 
 /**

@@ -544,6 +544,26 @@ const forEach = function (object, iterator) {
         }
     }
 };
+const createTree = function createTree(node) {
+    const el = document.createElement(node.tag);
+    if (node.class)
+        el.className = node.class;
+    if (node.text)
+        el.textContent = node.text;
+    if (node.html)
+        el.innerHTML = node.html;
+    if (node.attrs) {
+        for (const [key, value] of Object.entries(node.attrs)) {
+            el.setAttribute(key, value);
+        }
+    }
+    if (node.children) {
+        for (const child of node.children) {
+            el.appendChild(createTree(child));
+        }
+    }
+    return el;
+};
 const parseFile = function (file, receiver) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileContent = yield fetch(file).then(res => res.json());
@@ -1096,6 +1116,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
+/*! Unchecked */ Document.prototype.createTree = createTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 Date.at = atDate;
