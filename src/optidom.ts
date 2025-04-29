@@ -929,9 +929,9 @@ class HTMLElementCreator {
   private makeElement(el: HTMLElement, attrs: HTMLAttrs) {
     Object.entries(attrs).forEach(([key, value]) => {
       if (key === "text") {
-        el.text(value as string);
+        el.textContent = value as string;
       } else if (key === "html") {
-        el.html(value as string);
+        el.innerHTML = value as string;
       } else if (key === "class") {
         if (typeof value === "string") {
           el.classList.add(value);
