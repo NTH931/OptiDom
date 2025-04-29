@@ -762,7 +762,7 @@ class HTMLElementCreator {
                     el.classList.add(value);
                 }
                 else if (Array.isArray(value)) {
-                    el.classList.add(...value);
+                    el.classList.add(...value.filter(c => typeof c === 'string' && c.trim()));
                 }
             }
             else if (key === "style") {
