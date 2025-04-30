@@ -8,7 +8,7 @@
   "types": "types/optidom.lib.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NTH931/optidom.git"
+    "url": "git+https://github.com/NTH931/optidom.git"
   },
   "scripts": {
     "build": "tsc",
