@@ -672,14 +672,19 @@ const forEach = function <T>(object: T, iterator: (key: keyof T, value: T[keyof 
   }
 };
 
-function createElementTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
+function createElementTree(node: ElementNode): HTMLElementOf<typeof node.tag> {
   const el = document.createElement(node.tag);
 
+  // Add class if provided
   if (node.class) el.className = node.class;
+
+  // Add text content if provided
   if (node.text) el.textContent = node.text;
+
+  // Add inner HTML if provided
   if (node.html) el.innerHTML = node.html;
 
-  // Handle style
+  // Handle styles, ensure it’s an object
   if (node.style && typeof node.style === 'object') {
     for (const [prop, val] of Object.entries(node.style)) {
       el.style.setProperty(prop, val);
@@ -702,10 +707,14 @@ function createElementTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLEle
     }
   }
 
-  // Handle children
+  // Handle children (ensure it's an array or a single child)
   if (node.children) {
-    for (const child of node.children) {
-      el.appendChild(createElementTree(child));
+    if (Array.isArray(node.children)) {
+      node.children.forEach(child => {
+        el.appendChild(createElementTree(child));
+      });
+    } else {
+      el.appendChild(createElementTree(node.children)); // Support for a single child node
     }
   }
 

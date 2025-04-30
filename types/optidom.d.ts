@@ -175,14 +175,15 @@ type HTMLAttrs = {
 /**
  * @optidom
  */
-type ElementNode<T extends HTMLTag> = {
-  tag: T;
+type ElementNode = {
+  /** The tag name of the element */
+  tag: HTMLTag;
   class?: string;
   text?: string;
   html?: string;
-  style: Record<string, string>,
-  children?: ElementNode[],
-  [key: string]: string | Record<string, string> | ElementNode[] | undefined;
+  style?: Record<string, string>,
+  children?: ElementNode[] | ElementNode,
+  [key: string]: string | Record<string, string> | ElementNode[] | ElementNode | undefined;
 };
 
 /**
