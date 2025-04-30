@@ -544,7 +544,7 @@ const forEach = function (object, iterator) {
         }
     }
 };
-const createElementTree = function createTree(node) {
+function createElementTree(node) {
     const el = document.createElement(node.tag);
     if (node.class)
         el.className = node.class;
@@ -552,18 +552,33 @@ const createElementTree = function createTree(node) {
         el.textContent = node.text;
     if (node.html)
         el.innerHTML = node.html;
-    if (node.attrs) {
-        for (const [key, value] of Object.entries(node.attrs)) {
-            el.setAttribute(key, value);
+    // Handle style
+    if (node.style && typeof node.style === 'object') {
+        for (const [prop, val] of Object.entries(node.style)) {
+            el.style.setProperty(prop, val);
         }
     }
+    // Handle other attributes (excluding known keys)
+    for (const [key, val] of Object.entries(node)) {
+        if (key !== 'tag' &&
+            key !== 'class' &&
+            key !== 'text' &&
+            key !== 'html' &&
+            key !== 'style' &&
+            key !== 'children') {
+            if (typeof val === 'string') {
+                el.setAttribute(key, val);
+            }
+        }
+    }
+    // Handle children
     if (node.children) {
         for (const child of node.children) {
-            el.appendChild(createTree(child));
+            el.appendChild(createElementTree(child));
         }
     }
     return el;
-};
+}
 const parseFile = function (file, receiver) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileContent = yield fetch(file).then(res => res.json());
@@ -573,6 +588,7 @@ const parseFile = function (file, receiver) {
         return receiver(fileContent);
     });
 };
+//? Classes
 class OptiDOM {
     constructor() {
         this.deprecatedMigration = {
@@ -638,7 +654,6 @@ class OptiDOM {
         }
     }
 }
-// Cookie Class
 class Cookie {
     constructor(name, valueIfNotExist = null, days = 7, path = '/') {
         this.name = name;
@@ -679,7 +694,6 @@ class Cookie {
     getExpiry() { return this.expiry; }
     getPath() { return this.path; }
 }
-// Storage Class
 class LocalStorage {
     constructor(name, valueIfNotExist = null) {
         this.name = name;

@@ -672,27 +672,45 @@ const forEach = function <T>(object: T, iterator: (key: keyof T, value: T[keyof 
   }
 };
 
-const createElementTree = function createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
+function createElementTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
   const el = document.createElement(node.tag);
 
   if (node.class) el.className = node.class;
   if (node.text) el.textContent = node.text;
   if (node.html) el.innerHTML = node.html;
 
-  if (node.attrs) {
-    for (const [key, value] of Object.entries(node.attrs)) {
-      el.setAttribute(key, value);
+  // Handle style
+  if (node.style && typeof node.style === 'object') {
+    for (const [prop, val] of Object.entries(node.style)) {
+      el.style.setProperty(prop, val);
     }
   }
 
+  // Handle other attributes (excluding known keys)
+  for (const [key, val] of Object.entries(node)) {
+    if (
+      key !== 'tag' &&
+      key !== 'class' &&
+      key !== 'text' &&
+      key !== 'html' &&
+      key !== 'style' &&
+      key !== 'children'
+    ) {
+      if (typeof val === 'string') {
+        el.setAttribute(key, val);
+      }
+    }
+  }
+
+  // Handle children
   if (node.children) {
     for (const child of node.children) {
-      el.appendChild(createTree(child));
+      el.appendChild(createElementTree(child));
     }
   }
 
   return el;
-};
+}
 
 const parseFile = async function <R = any, T = R>(
   file: string,
@@ -707,6 +725,8 @@ const parseFile = async function <R = any, T = R>(
   return receiver(fileContent);
 };
 
+
+//? Classes
 class OptiDOM {
   private readonly deprecatedMigration = {
     // Node interface
@@ -779,7 +799,6 @@ class OptiDOM {
   }
 }
 
-// Cookie Class
 class Cookie {
   private name: string;
   private value: string | null;
@@ -832,7 +851,6 @@ class Cookie {
   public getPath(): string { return this.path; }
 }
 
-// Storage Class
 class LocalStorage<T> {
   private name: string;
   private value: T | null;

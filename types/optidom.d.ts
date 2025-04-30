@@ -180,8 +180,9 @@ type ElementNode<T extends HTMLTag> = {
   class?: string;
   text?: string;
   html?: string;
-  attrs?: Record<string, string>;
-  children?: ElementNode[];
+  style: Record<string, string>,
+  children?: ElementNode[],
+  [key: string]: string | Record<string, string> | ElementNode[] | undefined;
 };
 
 /**
