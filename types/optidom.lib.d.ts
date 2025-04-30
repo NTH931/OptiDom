@@ -148,7 +148,7 @@ interface Document {
    *   ]
    * });
    */
-  createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag>;
+  createElementTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag>;
 }
 
 interface Window {

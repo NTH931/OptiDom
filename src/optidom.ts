@@ -672,7 +672,7 @@ const forEach = function <T>(object: T, iterator: (key: keyof T, value: T[keyof 
   }
 };
 
-const createTree = function createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
+const createElementTree = function createTree<Tag extends HTMLTag>(node: ElementNode<Tag>): HTMLElementOf<Tag> {
   const el = document.createElement(node.tag);
 
   if (node.class) el.className = node.class;
@@ -1344,7 +1344,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
-/*! Unchecked */ Document.prototype.createTree = createTree;
+/*! Unchecked */ Document.prototype.createElementTree = createElementTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 
