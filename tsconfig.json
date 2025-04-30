@@ -19,7 +19,7 @@
   },
   "include": [
     "types/**/*",
-    "src/**/*",
-    "types/**/*"
-, "src/types" , "types" ]
+    "src/**/*"
+  ],
+  "exclude": ["scripts/*"]
 }

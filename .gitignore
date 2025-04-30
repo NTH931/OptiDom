@@ -1,2 +1,6 @@
 tsconfig.json
 .npmignore
+/node_modules
+.env
+/scripts
+.eslintignore

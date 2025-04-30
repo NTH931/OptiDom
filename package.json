@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "git-push": "git add . && git commit -m \"v%npm_package_version%\" && git push",
+    "git-push": "node scripts/push.js",
     "prepublishOnly": "npm run build && npm run git-push"
   },
   "keywords": [
