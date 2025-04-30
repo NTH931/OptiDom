@@ -544,7 +544,7 @@ const forEach = function (object, iterator) {
         }
     }
 };
-const createTree = function createTree(node) {
+const createElementTree = function createTree(node) {
     const el = document.createElement(node.tag);
     if (node.class)
         el.className = node.class;
@@ -1116,7 +1116,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
-/*! Unchecked */ Document.prototype.createTree = createTree;
+/*! Unchecked */ Document.prototype.createElementTree = createElementTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 Date.at = atDate;
