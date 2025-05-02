@@ -4,3 +4,4 @@ tsconfig.json
 .env
 /scripts
 .eslintignore
+package-lock.json

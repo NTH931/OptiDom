@@ -248,19 +248,33 @@ interface EventTarget {
    * @optidom
    * @param type The type of listener to use
    * @param listener The callback of the listener
-   * @param options Optional options to give the listener (if number, then thats the amount of times the event has to be triggered before being removed)
+   * @param options Optional options to give the listener 
    * @example
    * const el = document.$("#target");
    * 
    * el.addBoundListener("click", () => {
    *   el.removeAttr("id");
    * }, 1);
+   * 
+   * let mouseover = false;
+   * 
+   * el.addBoundListener("mouseover", () => {
+   *   el.removeAttr("id");
+   *   mouseover = true;
+   * }, () => mouseover);
    */
   addBoundListener<T extends EventTarget, K extends keyof EventMapOf<T>>(
     this: T,
     type: K,
     listener: (this: T, e: EventMapOf<T>[K]) => void,
     times: number,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addBoundListener<T extends EventTarget, K extends keyof EventMapOf<T>>(
+    this: T,
+    type: K,
+    listener: (this: T, e: EventMapOf<T>[K]) => void,
+    condition: (this: T) => boolean,
     options?: boolean | AddEventListenerOptions
   ): void;
 
@@ -684,6 +698,15 @@ interface HTMLCollection {
   single(): Element | null;
 }
 
+interface HTMLCollectionBase {
+  /**
+   * Returns the first value in the collection
+   * @optidom
+   * @note returns the same value as doing [0] on this object, but this method is preffered
+   */
+  single(): T | null;
+}
+
 interface DateConstructor {
   /** 
    * Returns an absolute number of time from January 1, 1970 
@@ -804,6 +827,8 @@ interface String {
    * const evenNewerString = newString.removeAll(/[HW]/) // elloorld
    */
   removeAll(finder: string | RegExp): string;
+
+  capitalize(): string;
 }
 
 interface JSON {

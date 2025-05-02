@@ -91,23 +91,34 @@ const addBoundListener = function <T extends EventTarget, K extends keyof EventM
   this: T,
   type: K,
   listener: (this: T, e: EventMapOf<T>[K]) => void,
-  times: number,
+  timesOrCondition: number | ((this: T) => boolean),
   options?: boolean | AddEventListenerOptions
 ): void {
-  if (times <= 0) return;
+  if (typeof timesOrCondition === "number") {
+    if (timesOrCondition <= 0) return;
 
-  let repeatCount = times; // Default to 1 if no repeat option provided
+    let repeatCount = timesOrCondition; // Default to 1 if no repeat option provided
 
-  const onceListener = (event: EventMapOf<T>[K]) => {
-    listener.call(this, event);
-    repeatCount--;
+    const onceListener = (event: EventMapOf<T>[K]) => {
+      listener.call(this, event);
+      repeatCount--;
 
-    if (repeatCount <= 0) {
-      this.removeEventListener(type as string, onceListener as EventListener, options);
-    }
-  };
+      if (repeatCount <= 0) {
+        this.removeEventListener(type as string, onceListener as EventListener, options);
+      }
+    };
 
-  this.addEventListener(type as string, onceListener as EventListener, options);
+    this.addEventListener(type as string, onceListener as EventListener, options);
+  } else {
+    const onceListener = (event: EventMapOf<T>[K]) => {
+      listener.call(this, event);
+      if (timesOrCondition.call(this)) {
+        this.removeEventListener(type as string, onceListener as EventListener, options);
+      }
+    };
+
+    this.addEventListener(type as string, onceListener as EventListener, options);
+  }
 };
 
 const hasText = function (this: Element, text: string | RegExp): boolean {
@@ -451,7 +462,7 @@ const hide = function (this: HTMLElement) {
 };
 
 const toggle = function (this: HTMLElement) {
-  if (this.css("visibility") === "visible") {
+  if (this.css("visibility") === "visible" || this.css("visibility") === "") {
     this.hide();
   } else {
     this.show();
@@ -597,10 +608,29 @@ const type = function (val: any): string {
   if (val === undefined) return "undefined";
 
   const typeOf = typeof val;
-  if (typeOf !== "object") return typeOf;
+  if (typeOf === "function") {
+    return `Function:${val.name || "<anonymous>"}(${val.length})`;
+  }
 
-  const toString = Object.prototype.toString.call(val);
-  return toString.slice(8, -1).toLowerCase(); // extracts 'Array', 'Object', 'Date', etc.
+  let typeName = capitalize.call(Object.prototype.toString.call(val).slice(8, -1));
+
+  const ctor = val.constructor?.name;
+  if (ctor && ctor !== typeName) {
+    typeName = ctor;
+  }
+
+  const len = (val as any).length;
+  if (typeof len === "number" && Number.isFinite(len)) {
+    typeName += `(${len})`;
+  } else if (val instanceof Map || val instanceof Set) {
+    typeName += `(${val.size})`;
+  } else if (val instanceof Date && !isNaN(val.getTime())) {
+    typeName += `:${val.toISOString().split("T")[0]}`;
+  } else if (typeName === "Object") {
+    typeName += `(${Object.keys(val).length})`;
+  }
+
+  return typeName;
 };
 
 function isEmpty(val: string): val is "";
@@ -630,13 +660,17 @@ function isEmpty(val: any): boolean {
   }
 
   // Object checking
-  if (typeof val === "object" && val !== null && Object.keys(val).length === 0) return true;
+  if (typeof val === 'object') {
+    const proto = Object.getPrototypeOf(val);
+    const isPlain = proto === Object.prototype || proto === null;
+    return isPlain && Object.keys(val).length === 0;
+  }
 
   return false;
 }
 
 function createEventListener<T extends AnyFunc[]>(
-  triggers: [...T],
+  triggers: T,
   callback: (...results: CallbackResult<T>) => void
 ): void {
   const originals = triggers.map(fn => fn);
@@ -650,13 +684,17 @@ function createEventListener<T extends AnyFunc[]>(
       return result;
     };
 
-    // Replace the function in its scope — must be globally replaceable or mutable to work
-    const fnName = (originalFn as any).name;
-    if (typeof window !== "undefined" && fnName && (window as any)[fnName] === originalFn) {
-      (window as any)[fnName] = wrapper;
-    } else {
-      console.warn("Cannot replace function:", originalFn);
+    // Replace global function by matching the actual function object
+    if (typeof window !== "undefined") {
+      for (const key in window) {
+        if ((window as any)[key] === originalFn) {
+          (window as any)[key] = wrapper;
+          return; // stop after replacement
+        }
+      }
     }
+
+    console.warn("Cannot replace function:", originalFn);
   });
 }
 
@@ -720,6 +758,11 @@ function createElementTree(node: ElementNode): HTMLElementOf<typeof node.tag> {
 
   return el;
 }
+
+const capitalize = function(this: string): string {
+  const i = this.search(/\S/);
+  return i === -1 ? this : this.slice(0, i) + this.charAt(i).toUpperCase() + this.slice(i + 1);
+};
 
 const parseFile = async function <R = any, T = R>(
   file: string,
@@ -1371,7 +1414,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
-/*! Unchecked */ Document.prototype.createElementTree = createElementTree;
+Document.prototype.createElementTree = createElementTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 
@@ -1447,6 +1490,7 @@ Array.prototype.chunk = chunk;
 
 String.prototype.remove = remove;
 String.prototype.removeAll = removeAll;
+String.prototype.capitalize = capitalize;
 
 
 defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);

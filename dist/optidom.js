@@ -74,18 +74,29 @@ const addEventListenerEnum = function (type, listener, options) {
         }
     }
 };
-const addBoundListener = function (type, listener, times, options) {
-    if (times <= 0)
-        return;
-    let repeatCount = times; // Default to 1 if no repeat option provided
-    const onceListener = (event) => {
-        listener.call(this, event);
-        repeatCount--;
-        if (repeatCount <= 0) {
-            this.removeEventListener(type, onceListener, options);
-        }
-    };
-    this.addEventListener(type, onceListener, options);
+const addBoundListener = function (type, listener, timesOrCondition, options) {
+    if (typeof timesOrCondition === "number") {
+        if (timesOrCondition <= 0)
+            return;
+        let repeatCount = timesOrCondition; // Default to 1 if no repeat option provided
+        const onceListener = (event) => {
+            listener.call(this, event);
+            repeatCount--;
+            if (repeatCount <= 0) {
+                this.removeEventListener(type, onceListener, options);
+            }
+        };
+        this.addEventListener(type, onceListener, options);
+    }
+    else {
+        const onceListener = (event) => {
+            listener.call(this, event);
+            if (timesOrCondition.call(this)) {
+                this.removeEventListener(type, onceListener, options);
+            }
+        };
+        this.addEventListener(type, onceListener, options);
+    }
 };
 const hasText = function (text) {
     if (typeof text === "string") {
@@ -367,7 +378,7 @@ const hide = function () {
     this.css("visibility", "hidden");
 };
 const toggle = function () {
-    if (this.css("visibility") === "visible") {
+    if (this.css("visibility") === "visible" || this.css("visibility") === "") {
         this.hide();
     }
     else {
@@ -486,15 +497,34 @@ const elementCreatorDocument = function (superEl, attrs) {
     return new HTMLElementCreator(superEl, attrs);
 };
 const type = function (val) {
+    var _a;
     if (val === null)
         return "null";
     if (val === undefined)
         return "undefined";
     const typeOf = typeof val;
-    if (typeOf !== "object")
-        return typeOf;
-    const toString = Object.prototype.toString.call(val);
-    return toString.slice(8, -1).toLowerCase(); // extracts 'Array', 'Object', 'Date', etc.
+    if (typeOf === "function") {
+        return `Function:${val.name || "<anonymous>"}(${val.length})`;
+    }
+    let typeName = capitalize.call(Object.prototype.toString.call(val).slice(8, -1));
+    const ctor = (_a = val.constructor) === null || _a === void 0 ? void 0 : _a.name;
+    if (ctor && ctor !== typeName) {
+        typeName = ctor;
+    }
+    const len = val.length;
+    if (typeof len === "number" && Number.isFinite(len)) {
+        typeName += `(${len})`;
+    }
+    else if (val instanceof Map || val instanceof Set) {
+        typeName += `(${val.size})`;
+    }
+    else if (val instanceof Date && !isNaN(val.getTime())) {
+        typeName += `:${val.toISOString().split("T")[0]}`;
+    }
+    else if (typeName === "Object") {
+        typeName += `(${Object.keys(val).length})`;
+    }
+    return typeName;
 };
 function isEmpty(val) {
     // Generic type checking
@@ -512,8 +542,11 @@ function isEmpty(val) {
         return val.size === 0; // size check works for these types
     }
     // Object checking
-    if (typeof val === "object" && val !== null && Object.keys(val).length === 0)
-        return true;
+    if (typeof val === 'object') {
+        const proto = Object.getPrototypeOf(val);
+        const isPlain = proto === Object.prototype || proto === null;
+        return isPlain && Object.keys(val).length === 0;
+    }
     return false;
 }
 function createEventListener(triggers, callback) {
@@ -524,14 +557,16 @@ function createEventListener(triggers, callback) {
             callback(...triggers.map((_, j) => j === i ? result : undefined));
             return result;
         };
-        // Replace the function in its scope — must be globally replaceable or mutable to work
-        const fnName = originalFn.name;
-        if (typeof window !== "undefined" && fnName && window[fnName] === originalFn) {
-            window[fnName] = wrapper;
+        // Replace global function by matching the actual function object
+        if (typeof window !== "undefined") {
+            for (const key in window) {
+                if (window[key] === originalFn) {
+                    window[key] = wrapper;
+                    return; // stop after replacement
+                }
+            }
         }
-        else {
-            console.warn("Cannot replace function:", originalFn);
-        }
+        console.warn("Cannot replace function:", originalFn);
     });
 }
 function toKebabCase(str) {
@@ -587,6 +622,10 @@ function createElementTree(node) {
     }
     return el;
 }
+const capitalize = function () {
+    const i = this.search(/\S/);
+    return i === -1 ? this : this.slice(0, i) + this.charAt(i).toUpperCase() + this.slice(i + 1);
+};
 const parseFile = function (file, receiver) {
     return __awaiter(this, void 0, void 0, function* () {
         const fileContent = yield fetch(file).then(res => res.json());
@@ -1138,7 +1177,7 @@ Document.prototype.ready = ready;
 Document.prototype.elementCreator = elementCreatorDocument;
 Document.prototype.bindShortcut = bindShortcut;
 Document.prototype.css = documentCss;
-/*! Unchecked */ Document.prototype.createElementTree = createElementTree;
+Document.prototype.createElementTree = createElementTree;
 Document.prototype.$ = $;
 Document.prototype.$$ = $$;
 Date.at = atDate;
@@ -1198,6 +1237,7 @@ Array.prototype.unique = unique;
 Array.prototype.chunk = chunk;
 String.prototype.remove = remove;
 String.prototype.removeAll = removeAll;
+String.prototype.capitalize = capitalize;
 defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
 defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
 defineGetter(HTMLElement.prototype, "visible", function () {

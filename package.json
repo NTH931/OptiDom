@@ -1,7 +1,7 @@
 {
   "name": "optidom",
   "type": "module",
-  "version": "2.4.11",
+  "version": "2.4.12",
   "private": false,
   "description": "Lightweight DOM manipulation, styling, and utility extension for native JavaScript objects — without wrappers.",
   "main": "dist/optidom.js",
@@ -12,8 +12,21 @@
   },
   "scripts": {
     "build": "tsc",
+    "test": "jest",
     "git-push": "node scripts/push.js",
     "prepublishOnly": "npm run build && npm run git-push"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "testEnvironment": "jsdom",
+    "setupFiles": ["./dist/optidom.js"]
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ]
   },
   "keywords": [
     "dom",
@@ -45,6 +58,11 @@
     "optidom": "^2.4.2"
   },
   "devDependencies": {
-    "cross-env": "^7.0.3"
+    "@babel/preset-env": "^7.27.1",
+    "@types/jest": "^29.5.14",
+    "babel-jest": "^29.7.0",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
   }
 }
