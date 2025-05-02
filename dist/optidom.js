@@ -89,6 +89,8 @@ const addBoundListener = function (type, listener, timesOrCondition, options) {
         this.addEventListener(type, onceListener, options);
     }
     else {
+        if (timesOrCondition.call(this))
+            return;
         const onceListener = (event) => {
             listener.call(this, event);
             if (timesOrCondition.call(this)) {

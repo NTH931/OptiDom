@@ -110,6 +110,8 @@ const addBoundListener = function <T extends EventTarget, K extends keyof EventM
 
     this.addEventListener(type as string, onceListener as EventListener, options);
   } else {
+    if (timesOrCondition.call(this)) return;
+
     const onceListener = (event: EventMapOf<T>[K]) => {
       listener.call(this, event);
       if (timesOrCondition.call(this)) {
