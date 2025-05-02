@@ -291,7 +291,7 @@ interface EventTarget {
   addEventListeners<T extends EventTarget>(
     this: T,
     listeners: {
-      [K in keyof EventMapOf<T>]?: (e: EventMapOf<T>[K]) => any
+      [K in keyof EventMapOf<T>]?: (this: T, e: EventMapOf<T>[K]) => any
     }
   ): void
 
@@ -309,7 +309,7 @@ interface EventTarget {
   addEventListeners<T extends EventTarget>(
     this: T,
     types: (keyof EventMapOf<T>)[],
-    listener: (e: Event) => any,
+    listener: (this: T, e: Event) => any,
     options?: boolean | AddEventListenerOptions
   ): void;
 }

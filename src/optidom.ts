@@ -170,7 +170,7 @@ const atDate = (year: number, monthIndex: number, date?: number, hours?: number,
 function addEventListeners<T extends EventTarget>(
   this: T,
   listenersOrTypes: (keyof EventMapOf<T>)[] | {
-    [K in keyof EventMapOf<T>]?: (e: EventMapOf<T>[K]) => any
+    [K in keyof EventMapOf<T>]?: (this: T, e: EventMapOf<T>[K]) => any
   },
   callback?: (e: Event) => any,
   options?: AddEventListenerOptions | boolean
