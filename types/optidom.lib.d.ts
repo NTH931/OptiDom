@@ -399,8 +399,8 @@ interface HTMLElement {
    * 
    * console.log(el.css());
    */
-  css(key: string, value: string): void;
-  css(key: string): string;
+  css(key: keyof CSSStyleDeclaration, value: string | number): void;
+  css(key: keyof CSSStyleDeclaration): string;
   css(key: Partial<Record<keyof CSSStyleDeclaration, string | number>>): void;
   css(): Partial<Record<keyof CSSStyleDeclaration, string>>;
 

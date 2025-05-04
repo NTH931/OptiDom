@@ -193,8 +193,8 @@ function addEventListeners<T extends EventTarget>(
 
 const css = function (
   this: HTMLElement,
-  key?: string | Partial<Record<keyof CSSStyleDeclaration, string | number>>,
-  value?: string
+  key?: keyof CSSStyleDeclaration | Partial<Record<keyof CSSStyleDeclaration, string | number>>,
+  value?: string | number
 ): any {
   const css = this.style;
 
@@ -202,7 +202,7 @@ const css = function (
     // Return all styles
     const result: Partial<Record<keyof CSSStyleDeclaration, string>> = {};
     for (let i = 0; i < css.length; i++) {
-      const prop = css.item(i);
+      const prop = css[i];
       if (prop) {
         result[prop as keyof CSSStyleDeclaration] = css.getPropertyValue(prop).trim();
       }
@@ -217,7 +217,7 @@ const css = function (
     } else {
       // Set one value
       if (key in css) {
-        css.setProperty(key, value);
+        css.setProperty(key, value.toString());
       }
     }
   } else {
@@ -257,7 +257,7 @@ const documentCss = function (
       ruleIndex = i;
       const declarations = rule.style;
       for (let j = 0; j < declarations.length; j++) {
-        const name = declarations.item(j);
+        const name = declarations[j];
         existingStyles[name] = declarations.getPropertyValue(name).trim();
       }
       break;
@@ -854,18 +854,18 @@ class OptiDOM {
   }
 }
 
-class Cookie {
+class Cookie<T = string> {
   private name: string;
-  private value: string | null;
+  private value: T | null;
   private expiry: number;
   private path: string;
 
-  public constructor(name: string, valueIfNotExist: string | null = null, days: number = 7, path: string = '/') {
+  public constructor(name: string, valueIfNotExist: T | null = null, days: number = 7, path: string = '/') {
     this.name = name;
     this.expiry = days;
     this.path = path;
 
-    const existingValue = Cookie.get(name);
+    const existingValue = Cookie.get<T>(name);
     if (existingValue === null && valueIfNotExist !== null) {
       Cookie.set(name, valueIfNotExist, days, path);
       this.value = valueIfNotExist;
@@ -874,33 +874,39 @@ class Cookie {
     }
   }
 
-  public static set(name: string, value: string, days: number = 7, path: string = '/'): void {
+  public static set<T = string>(name: string, value: T, days: number = 7, path: string = '/'): void {
     const date = new Date();
     date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=${path}`;
+    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${date.toUTCString()};path=${path}`;
   }
 
-  public static get(name: string): string | null {
+  public static get<T = string>(name: string): T | null {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? decodeURIComponent(match[2]) : null;
+    if (!match) return null;
+
+    try {
+      return JSON.parse(decodeURIComponent(match[2])) as T;
+    } catch {
+      return null;
+    }
   }
 
   public static delete(name: string, path: string = '/'): void {
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${path}`;
   }
 
-  /** Instance methods to interact with this specific cookie */
-  public update(value: string, days: number = this.expiry, path: string = this.path) {
+  /** Instance methods */
+  public update(value: T, days: number = this.expiry, path: string = this.path): void {
     this.value = value;
-    Cookie.set(this.name, value, days, path);
+    Cookie.set<T>(this.name, value, days, path);
   }
 
-  public delete() {
+  public delete(): void {
     this.value = null;
     Cookie.delete(this.name, this.path);
   }
 
-  public getValue(): string | null { return this.value; }
+  public getValue(): T | null { return this.value; }
   public getName(): string { return this.name; }
   public getExpiry(): number { return this.expiry; }
   public getPath(): string { return this.path; }
@@ -922,13 +928,17 @@ class LocalStorage<T> {
     }
   }
 
-  static set(key: string, value: any): void {
+  static set<T = string>(key: string, value: T): void {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
   static get<T = string>(key: string): T | null {
     const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    try {
+      return value ? JSON.parse(value) as T : null;
+    } catch {
+      return null;
+    }
   }
 
   static remove(key: string): void {
@@ -970,13 +980,17 @@ class SessionStorage<T> {
     }
   }
 
-  static set(key: string, value: any): void {
+  static set<T = string>(key: string, value: T): void {
     sessionStorage.setItem(key, JSON.stringify(value));
   }
 
   static get<T = string>(key: string): T | null {
     const value = sessionStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
+    try {
+      return value ? JSON.parse(value) as T : null;
+    } catch {
+      return null;
+    }
   }
 
   static remove(key: string): void {

@@ -23,3 +23,19 @@ describe("Document.leaving", () => {
     });
   });
 });
+
+describe("Document.css", () => {
+  it("should set the css for an element class", () => {
+    const div = document.createElement("div");
+    div.className = "target";
+    document.body.appendChild(div);
+
+    document.css("div.target", {
+      color: "red"
+    });
+
+    const styles = document.css("div.target");
+    expect(styles).toHaveProperty("color");
+    expect(styles.color).toBe("red");
+  });
+});

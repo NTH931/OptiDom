@@ -160,7 +160,7 @@ const css = function (key, value) {
         // Return all styles
         const result = {};
         for (let i = 0; i < css.length; i++) {
-            const prop = css.item(i);
+            const prop = css[i];
             if (prop) {
                 result[prop] = css.getPropertyValue(prop).trim();
             }
@@ -175,7 +175,7 @@ const css = function (key, value) {
         else {
             // Set one value
             if (key in css) {
-                css.setProperty(key, value);
+                css.setProperty(key, value.toString());
             }
         }
     }
@@ -208,7 +208,7 @@ const documentCss = function (element, object) {
             ruleIndex = i;
             const declarations = rule.style;
             for (let j = 0; j < declarations.length; j++) {
-                const name = declarations.item(j);
+                const name = declarations[j];
                 existingStyles[name] = declarations.getPropertyValue(name).trim();
             }
             break;
@@ -721,16 +721,23 @@ class Cookie {
     static set(name, value, days = 7, path = '/') {
         const date = new Date();
         date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-        document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=${path}`;
+        document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${date.toUTCString()};path=${path}`;
     }
     static get(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? decodeURIComponent(match[2]) : null;
+        if (!match)
+            return null;
+        try {
+            return JSON.parse(decodeURIComponent(match[2]));
+        }
+        catch (_a) {
+            return null;
+        }
     }
     static delete(name, path = '/') {
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=${path}`;
     }
-    /** Instance methods to interact with this specific cookie */
+    /** Instance methods */
     update(value, days = this.expiry, path = this.path) {
         this.value = value;
         Cookie.set(this.name, value, days, path);
@@ -761,7 +768,12 @@ class LocalStorage {
     }
     static get(key) {
         const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : null;
+        try {
+            return value ? JSON.parse(value) : null;
+        }
+        catch (_a) {
+            return null;
+        }
     }
     static remove(key) {
         localStorage.removeItem(key);
@@ -798,7 +810,12 @@ class SessionStorage {
     }
     static get(key) {
         const value = sessionStorage.getItem(key);
-        return value ? JSON.parse(value) : null;
+        try {
+            return value ? JSON.parse(value) : null;
+        }
+        catch (_a) {
+            return null;
+        }
     }
     static remove(key) {
         sessionStorage.removeItem(key);
