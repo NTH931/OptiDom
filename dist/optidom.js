@@ -1166,6 +1166,40 @@ class Sequence {
         return this;
     }
 }
+class ID {
+    // Helper function to generate a random string of characters
+    static generateRandomString(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+    // Constructor that generates a unique ID when the instance is created
+    constructor(prefix = '', length = 30) {
+        let newId;
+        do {
+            const randomStr = ID.generateRandomString(length);
+            newId = `${prefix}${randomStr}`;
+        } while (ID.usedIds.has(newId));
+        ID.usedIds.add(newId);
+        this.id = newId;
+    }
+    // Helper function to get the instance's unique ID
+    getId() {
+        return this.id;
+    }
+    // Helper function to validate if an ID exists
+    static isValidId(id) {
+        return ID.usedIds.has(id);
+    }
+    // Helper function to remove an ID from the set of used IDs
+    static removeId(id) {
+        ID.usedIds.delete(id);
+    }
+}
+ID.usedIds = new Set();
 // -------------------------------------------------------------------------------------------------
 //! Prototypes
 globalThis.f = (iife) => iife();

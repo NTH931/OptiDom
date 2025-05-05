@@ -1396,6 +1396,48 @@ class Sequence {
   }
 }
 
+class ID {
+  private static usedIds: Set<string> = new Set();
+  public id: string;
+
+  // Helper function to generate a random string of characters
+  private static generateRandomString(length: number): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+  }
+
+  // Constructor that generates a unique ID when the instance is created
+  constructor(prefix: string = '', length: number = 30) {
+    let newId: string;
+    do {
+      const randomStr = ID.generateRandomString(length);
+      newId = `${prefix}${randomStr}`;
+    } while (ID.usedIds.has(newId));
+
+    ID.usedIds.add(newId);
+    this.id = newId;
+  }
+
+  // Helper function to get the instance's unique ID
+  public getId(): string {
+    return this.id;
+  }
+
+  // Helper function to validate if an ID exists
+  public static isValidId(id: string): boolean {
+    return ID.usedIds.has(id);
+  }
+
+  // Helper function to remove an ID from the set of used IDs
+  public static removeId(id: string): void {
+    ID.usedIds.delete(id);
+  }
+}
+
 
 // -------------------------------------------------------------------------------------------------
 

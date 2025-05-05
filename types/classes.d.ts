@@ -6,8 +6,8 @@ declare class OptiDOM {
 declare class Cookie {
   constructor(name: string, valueIfNotExist: string | null = null, days: number = 7, path: string = '/')
 
-  static set(name: string, value: string, days: number = 7, path: string = '/'): void;
-  static get(name: string): string | null;
+  static set<T = string>(name: string, value: T, days: number = 7, path: string = '/'): void;
+  static get<T = string>(name: string): T | null;
   static delete(name: string, path: string = '/'): void;
 
   update(value: string, days: number = this.expiry, path: string = this.path): void;
@@ -22,7 +22,7 @@ declare class Cookie {
 declare class LocalStorage<T> {
   constructor(name: string, valueIfNotExist: T | null = null)
 
-  static set(key: string, value: any): void;
+  static set<T = string>(key: string, value: T): void;
   static get<T = string>(key: string): T | null;
   static remove(key: string): void;
   static clear(): void;
@@ -36,7 +36,7 @@ declare class LocalStorage<T> {
 declare class SessionStorage<T> {
   constructor(name: string, valueIfNotExist: T | null = null);
 
-  static set(key: string, value: any): void;
+  static set<T = string>(key: string, value: T): void;
   static get<T = string>(key: string): T | null;
   static remove(key: string): void;
   static clear(): void;
