@@ -1560,3 +1560,5 @@ defineGetter(HTMLElement.prototype, "visible", function (this: HTMLElement) {
     ? this.css("display") !== "none"
     : Number(this.css("opacity")) > 0;
 });
+
+export {};
