@@ -1,3 +1,5 @@
+/// <reference path="../types/optidom.lib.d.ts" />
+
 describe("Document.ready", () => {
   it("should run when the document is loaded", () => {
     window.dispatchEvent(new Event("load"));

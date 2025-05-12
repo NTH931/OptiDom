@@ -1,3 +1,5 @@
+/// <reference path="../types/optidom.lib.d.ts" />
+
 describe("Element.hasText", () => {
   /** @type {Element} */
   let element;
@@ -26,13 +28,13 @@ describe("Element.text", () => {
   });
 
   it("should set text content", () => {
-    element.text("Test");
+    element.txt("Test");
     expect(element.textContent).toBe("Test");
   });
 
   it("should get text content", () => {
     element.textContent = "Hello";
-    expect(element.text()).toBe("Hello");
+    expect(element.txt()).toBe("Hello");
   });
 });
 

@@ -1,16 +1,11 @@
-declare class OptiDOM {
-  deprecate(funcName: keyof typeof this.deprecatedMigration, force: boolean = false): void;
-  deprecateAll(force: boolean = false): void;
-}
-
 declare class Cookie {
-  constructor(name: string, valueIfNotExist: string | null = null, days: number = 7, path: string = '/')
+  constructor(name: string, valueIfNotExist?: string | null, days?: number, path?: string)
 
-  static set<T = string>(name: string, value: T, days: number = 7, path: string = '/'): void;
+  static set<T = string>(name: string, value: T, days?: number, path?: string): void;
   static get<T = string>(name: string): T | null;
-  static delete(name: string, path: string = '/'): void;
+  static delete(name: string, path?: string): void;
 
-  update(value: string, days: number = this.expiry, path: string = this.path): void;
+  update(value: string, days?: number, path?: string): void;
   delete(): void;
 
   getValue(): string | null;
@@ -20,7 +15,7 @@ declare class Cookie {
 }
 
 declare class LocalStorage<T> {
-  constructor(name: string, valueIfNotExist: T | null = null)
+  constructor(name: string, valueIfNotExist?: T | null)
 
   static set<T = string>(key: string, value: T): void;
   static get<T = string>(key: string): T | null;
@@ -34,7 +29,7 @@ declare class LocalStorage<T> {
 }
 
 declare class SessionStorage<T> {
-  constructor(name: string, valueIfNotExist: T | null = null);
+  constructor(name: string, valueIfNotExist?: T | null);
 
   static set<T = string>(key: string, value: T): void;
   static get<T = string>(key: string): T | null;
@@ -103,9 +98,11 @@ declare class Time {
 }
 
 declare class Sequence {
+  private finalResult: any;
+
   private constructor();
 
-  async execute(...args: any[]): Promise<any>;
+  execute(...args: any[]): Promise<any>;
 
   result(): any;
   result(callback: (result: unknown) => any): any;
@@ -116,7 +113,7 @@ declare class Sequence {
   static chain(...functions: ((input: any) => any)[]): Sequence;
   static parallel(...functions: (() => any)[]): Sequence;
   static race(...functions: (() => any)[]): Sequence;
-  static retry(retries: number, task: () => Promise<any>, delay = 0): Sequence;
+  static retry(retries: number, task: () => Promise<any>, delay?: number): Sequence;
 
   add(...functions: ((...args: any[]) => any)[]): this;
 }

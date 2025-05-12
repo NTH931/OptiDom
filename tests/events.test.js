@@ -1,3 +1,5 @@
+/// <reference path="../types/optidom.lib.d.ts" />
+
 describe("EventTarget.addBoundListener", () => {
   it("should cancel the listener after `x` amount of times", () => {
     const div = document.createElement("div");

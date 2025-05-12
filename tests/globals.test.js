@@ -1,3 +1,6 @@
+/// <reference path="../types/optidom.lib.d.ts" />
+import {jest} from '@jest/globals';
+
 describe('type', () => {
   it('should return the data type for a data type\'s input', () => {
     expect(type(42)).toBe("Number");
@@ -75,9 +78,29 @@ describe("isEmpty", () => {
 describe("f", () => {
   it("should immediately invoke a function", () => {
     let called = false;
-    globalThis.f(() => { called = true; });
+    f(() => { called = true; });
     expect(called).toBeTruthy();
     
+  });
+});
+
+describe("generateID", () => {
+  it("should return a unique ID of length 16", () => {
+    expect(generateID()).toHaveLength(16);
+  });
+
+  it("should generate a unique id each time", () => {
+    const id1 = generateID();
+    const id2 = generateID();
+    expect(id1).not.toBe(id2);
+  });
+
+  it('should ensure the ID is readonly', () => {
+    const id = generateID();
+
+    expect(() => {
+      id = "new-id";
+    }).toThrow();
   });
 });
 
@@ -114,15 +137,9 @@ describe("Storage shims", () => {
   });
 });
 
-describe("optidom", () => {
-  it("optidom should be an instance of OptiDOM", () => {
-    expect(globalThis.optidom.deprecate).toBeDefined();
-  });
-});
-
 describe("UnknownError", () => {
   it("should extend Error and set name", () => {
-    const err = new globalThis.UnknownError("oops");
+    const err = new UnknownError("oops");
     expect(err).toBeInstanceOf(Error);
     expect(err.name).toBe("UnknownError");
     expect(err.message).toBe("oops");
@@ -131,14 +148,14 @@ describe("UnknownError", () => {
 
 describe("NotImplementedError", () => {
   it("should extend Error with default message", () => {
-    const err = new globalThis.NotImplementedError();
+    const err = new NotImplementedError();
     expect(err).toBeInstanceOf(Error);
     expect(err.name).toBe("NotImplementedError");
     expect(err.message).toBe("Function not implimented yet.");
   });
 
   it("should use provided message", () => {
-    const err = new globalThis.NotImplementedError("custom");
+    const err = new NotImplementedError("custom");
     expect(err.message).toBe("custom");
   });
 });

@@ -4,6 +4,8 @@ type RegularKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k
 type Shortcut = `${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${ModifierKey}+${RegularKey}`
 type StringRecord<T> = Record<string, T>;
 
+type ID = string & { readonly __brand: unique symbol };
+
 type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
 
 type HTMLTag = keyof HTMLElementTagNameMap;
@@ -22,9 +24,6 @@ type SVGElementTagNameOf<T extends SVGElement> = {
 type MathMLElementTagNameOf<T extends MathMLElement> = {
   [K in keyof MathMLElementTagNameMap]: MathMLElementTagNameMap[K] extends T ? K : never;
 }[keyof MathMLElementTagNameMap];
-declare type OptiDOMPatchedFunction = string;
-
-type OptiDOMDeprecatedFunction = keyof typeof deprecatedMigration;
 
 type InputTypeMap = {
   text: string;
@@ -42,7 +41,7 @@ type AnyFunc = (...args: any[]) => any;
 /** Returns the resulting type(s) of the function(s) given */
 type CallbackResult<T extends AnyFunc | readonly AnyFunc[]> = 
   T extends AnyFunc ? ReturnType<T> : 
-  T extends readonly AnyFunc[] ? { [K in keyof T]: ReturnType<T[K]> } : never;
+  T extends readonly [...infer R] ? R extends AnyFunc[] ? { [K in keyof R]: ReturnType<T[K]> } : never : never;
 
 type EventMapOf<T> =
   T extends HTMLVideoElement ? HTMLVideoElementEventMap :
@@ -92,7 +91,7 @@ type EventMapOf<T> =
   T extends MediaSource ? MediaSourceEventMap :
 
   T extends MessagePort ? MessagePortEventMap :
-  T extends MessageEventTarget ? MessageEventTargetEventMap :
+  T extends MessageEventTarget<any> ? MessageEventTargetEventMap :
   T extends BroadcastChannel ? BroadcastChannelEventMap :
   T extends WebSocket ? WebSocketEventMap :
 
@@ -159,6 +158,17 @@ interface HTMLElementCascade {
   [key: string]: any
 }
 
+interface EventEmitter {
+  // Register a listener for a specific event, inferred from event name
+  on<T extends string, P extends any[]>(event: T, callback: (...args: P) => void): void;
+
+  // Remove a listener for a specific event
+  off<T extends string, P extends any[]>(event: T, callback: (...args: P) => void): void;
+
+  // Emit an event with specific parameters
+  emit<T extends string, P extends any[]>(event: T, ...params: P): void;
+}
+
 /* New Classes */
 /**
  * @optidom
@@ -197,9 +207,9 @@ interface HTMLElementCreator {
   get element(): HTMLElement;
 }
 
-enum Direction {
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT
+const enum Direction {
+  UP = "UP",
+  DOWN = "DOWN",
+  LEFT = "LEFT",
+  RIGHT = "RIGHT"
 }

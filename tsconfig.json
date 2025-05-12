@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "module": "ESNext",
+    "module": "None",
     "moduleResolution": "Node",
+    "downlevelIteration": true,
     "strict": true,
     "noImplicitThis": true,
     "noEmitOnError": true,
@@ -11,7 +12,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist/",
+    "outFile": "dist/optidom.js",
     "types": [
       "./types/optidom.d.ts",
       "./types/optidom.lib.d.ts",
@@ -19,11 +20,11 @@
       "./types/alterations.d.ts",
       "./types/classes.d.ts"
     ],
-    "lib": ["DOM", "ES2020", "ESNext"]
+    "lib": ["DOM", "ES2021", "ESNext"]
   },
   "include": [
     "types/**/*",
-    "src/**/*"
+    "src/**/optidom.ts"
   ],
   "exclude": ["scripts/*"]
 }

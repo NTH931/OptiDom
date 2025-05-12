@@ -1,3 +1,5 @@
+/// <reference path="../types/optidom.lib.d.ts" />
+
 describe("NodeList.addEventListener", () => {
   /** @type {NodeList} */
   let nodeList;

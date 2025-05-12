@@ -53,7 +53,7 @@ interface Document {
    * @example
    * const el = document.$("#target");
    * 
-   * el.text("New Text");
+   * el.txt("New Text");
    * if (el.hasText("New")) {
    *   console.log("New!");
    *   el.addClass("new");
@@ -217,7 +217,7 @@ interface Node {
    * @param selector The css style selector used to find the descendants
    * @example
    * const el = document.$("#parent");
-   * el.text("Parent");
+   * el.txt("Parent");
    * 
    * el.find(".hidden").removeClass("hidden");
    */
@@ -232,7 +232,7 @@ interface Node {
    * @param selector The css style selector used to find the descendants
    * @example
    * const el = document.$("#parent");
-   * el.text("Parent");
+   * el.txt("Parent");
    * 
    * el.find(".hidden", true).removeClass("hidden");
    */
@@ -376,12 +376,12 @@ interface Element {
    * @note Putting only "textContent" as a parameter references the previous textContent
    * @example
    * const el = document.$("#target");
-   * el.text("textContent", "Yelp")
+   * el.txt("textContent", "Yelp")
    * 
-   * console.log(el.text());
+   * console.log(el.txt());
    */
-  text(newText: string | "textContent", ...moreText: (string | "textContent")[]): void;
-  text(): string;
+  txt(newText: string | "textContent", ...moreText: (string | "textContent")[]): void;
+  txt(): string;
 }
 
 interface HTMLElement {
@@ -704,7 +704,7 @@ interface HTMLCollectionBase {
    * @optidom
    * @note returns the same value as doing [0] on this object, but this method is preffered
    */
-  single(): T | null;
+  single(): Element | null;
 }
 
 interface DateConstructor {
@@ -725,7 +725,7 @@ interface DateConstructor {
    * const time = new Time();
    * const newDate = Date.fromTime(time, 2025, 4, 28);
    */
-  fromTime(this: Date, time: TimeInternal, year: number, monthIndex: number, date?: number): Date;
+  fromTime(this: Date, time: Time, year: number, monthIndex: number, date?: number): Date;
 }
 
 interface Math {
@@ -735,6 +735,13 @@ interface Math {
    * @param max the maximum random number 
    */
   random(max: number): number
+
+  /** 
+   * Returns a pseudorandom number between 0 and max.
+   * @optidom
+   * @param max the maximum random number 
+   */
+  random(min: number, max: number): number
 }
 
 interface ObjectConstructor {
@@ -802,7 +809,7 @@ interface Array<T> {
    * const newArr = [1, 2, 3, 3, 4].chunk(2);
    * console.log(newArr); // [[1, 2], [3, 3], [4]]
    */
-  chunk(this: T[], size: int): T[][]
+  chunk(this: T[], size: number): T[][]
 }
 
 interface String {
@@ -851,7 +858,7 @@ interface JSON {
  * @optidom
  * @param iife The function to run the code in for the iife
  */
-function f(iife: () => void): void;
+declare function f(iife: () => void): void;
 
 /**
  * Creates a user defined event listener that triggers the callback when one of the triggers is activated
@@ -864,7 +871,7 @@ function f(iife: () => void): void;
  *   console.log(conf); // Logs return value returned
  * });
  */
-function createEventListener<T extends AnyFunc[]>(
+declare function createEventListener<T extends AnyFunc[]>(
   triggers: [...T], 
   callback: (...results: CallbackResult<T>) => void
 ): void;
@@ -884,17 +891,17 @@ function createEventListener<T extends AnyFunc[]>(
  * isEmpty([]); // true
  * isEmpty([1, 2]); // false
  */
-function isEmpty(val: string): val is "";
-function isEmpty(val: number): val is 0 | typeof NaN;
-function isEmpty(val: boolean): val is false;
-function isEmpty(val: null | undefined): true;
-function isEmpty(val: Array<any>): val is [];
-function isEmpty(val: Record<any, unknown>): val is Record<any, never>;
-function isEmpty(val: Map<any, any>): val is Map<any, never>;
-function isEmpty(val: Set<any>): val is Set<never>;
-function isEmpty(val: WeakMap<object, any>): val is WeakMap<object, any>;
-function isEmpty(val: WeakSet<object>): val is WeakSet<object>;
-function isEmpty(val: any): boolean;
+declare function isEmpty(val: string): val is "";
+declare function isEmpty(val: number): val is 0 | typeof NaN;
+declare function isEmpty(val: boolean): val is false;
+declare function isEmpty(val: null | undefined): true;
+declare function isEmpty(val: Array<any>): val is [];
+declare function isEmpty(val: Record<any, unknown>): val is Record<any, never>;
+declare function isEmpty(val: Map<any, any>): val is Map<any, never>;
+declare function isEmpty(val: Set<any>): val is Set<never>;
+declare function isEmpty(val: WeakMap<object, any>): val is WeakMap<object, any>;
+declare function isEmpty(val: WeakSet<object>): val is WeakSet<object>;
+declare function isEmpty(val: any): boolean;
 
 /**
  * Gets the type of the value and returns a string representation of the type of the value
@@ -913,14 +920,33 @@ function isEmpty(val: any): boolean;
  * type(new Map())       // "map"
  * type(new Set())       // "set"
  */
-function type(val: any): string;
+declare function type(val: any): string;
 
-var UnknownError: ErrorType;
-var NotImplementedError: ErrorType;
+/**
+ * Generates a unique string ID for use in identifying
+ * @optidom
+ * @returns A string ID
+ * @example 
+ * const uniqueID = generateID();
+ * const newID = generateID();
+ * 
+ * console.log(uniqueID); // gsA*jO_82&...
+ * console.log(newID); // e6%84_fU2@3...
+ */
+declare function generateID(): ID;
 
-var Cookie: typeof Cookie;
-var LocalStorage: typeof LocalStorage;
-var SessionStorage: typeof SessionStorage;
-var Time: typeof Time;
-var Sequence: typeof Sequence;
-var optidom: OptiDOM;
+/**
+ * The global event emitter instance
+ * @optidom
+ */
+declare var emitter: EventEmitter;
+
+declare var UnknownError: ErrorType;
+declare var NotImplementedError: ErrorType;
+
+declare var Cookie: typeof Cookie;
+declare var LocalStorage: typeof LocalStorage;
+declare var SessionStorage: typeof SessionStorage;
+declare var Time: typeof Time;
+declare var Sequence: typeof Sequence;
+declare var optidom: OptiDOM;
