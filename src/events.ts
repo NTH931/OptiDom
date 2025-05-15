@@ -58,4 +58,39 @@ export function addEventListeners<T extends EventTarget>(
   }
 };
 
+export function delegateEventListener<
+  T extends EventTarget,
+  U extends Element,
+  K extends keyof EventMapOf<T>
+>(
+  this: T,
+  type: K,
+  delegator: HTMLElement | HTMLTag | string,
+  listener: (this: U, e: EventMapOf<T>[K]) => void,
+  options?: boolean | AddEventListenerOptions
+) {
+  this.addEventListener(
+    type as string,
+    function (this: T, e: Event) {
+      const target = e.target as HTMLElement;
+
+      let selector: string;
+      if (typeof delegator === "string") {
+        selector = delegator;
+      } else if ("tagName" in delegator && typeof delegator.tagName === "string") {
+        selector = delegator.tagName.toLowerCase(); // or a class/id if appropriate
+      } else {
+        selector = delegator.tagName?.toLowerCase?.() ?? "";
+      }
+
+      const matchedEl = target.closest(selector) as U | null;
+
+      if (matchedEl && this instanceof Element && this.contains(matchedEl)) {
+        listener.call(matchedEl, e as EventMapOf<T>[K]);
+      }
+    },
+    options
+  );
+}
+
 }

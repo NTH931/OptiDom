@@ -50,14 +50,14 @@ export function css(
     } else {
       // Set one value
       if (key in css) {
-        css.setProperty(key, value.toString());
+        css.setProperty(toKebabCase(key), value.toString());
       }
     }
   } else {
     // Set multiple
     for (const [prop, val] of Object.entries(key)) {
-      if (prop in css && val !== null && val !== undefined) {
-        css.setProperty(prop, val.toString());
+      if (val !== null && val !== undefined) {
+        css.setProperty(toKebabCase(prop), val.toString());
       }
     }
   }
@@ -132,12 +132,12 @@ export function createChildren (this: HTMLElement, elements: HTMLElementCascade)
   this.appendChild(element);
 };
 
-export function tag <T extends keyof HTMLElementTagNameMap>(
-  this: HTMLElement,
+export function tag <S extends HTMLElement, T extends HTMLTag = HTMLElementTagNameOf<S>>(
+  this: S,
   newTag?: T
-): HTMLElementOf<T> | keyof HTMLElementTagNameMap {
+): HTMLElementOf<T> | string {
   if (!newTag) {
-    return this.tagName.toLowerCase() as keyof HTMLElementTagNameMap;
+    return this.tagName.toLowerCase() as HTMLTag;
   }
 
   const newElement = document.createElement(newTag) as HTMLElementOf<T>;
@@ -270,5 +270,28 @@ export function serialize (this: HTMLFormElement): string {
 export function elementCreator (this: HTMLElement) {
   return new HTMLElementCreator(this);
 };
+
+export function cut<T extends Element>(this: T): T {
+  const clone = document.createElementNS(this.namespaceURI, this.tagName) as T;
+
+  // Copy all attributes
+  for (const attr of Array.from(this.attributes)) {
+    clone.setAttribute(attr.name, attr.value);
+  }
+
+  // Deep copy child nodes (preserves text, elements, etc.)
+  for (const child of Array.from(this.childNodes)) {
+    clone.appendChild(child.cloneNode(true));
+  }
+
+  // Optionally copy inline styles (not always needed if using setAttribute above)
+   if (this instanceof HTMLElement && clone instanceof HTMLElement) {
+    clone.style.cssText = this.style.cssText;
+  }
+
+  this.remove(); // Remove original from DOM
+
+  return clone;
+}
 
 }

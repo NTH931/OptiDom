@@ -542,4 +542,20 @@ export class Sequence {
   }
 }
 
+export class HTMLDefaultElement extends HTMLOptionElement {
+  constructor() {
+    super();
+    super.hidden = true;
+    this.selected = true;
+  }
+
+  set hidden(_: boolean) {
+    throw new AccessError("Cannot change the hidden property of a HTMLDefaultElement.");
+  }
+
+  get hidden(): boolean {
+    return true;
+  }
+}
+
 }

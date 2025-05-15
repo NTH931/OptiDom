@@ -478,6 +478,20 @@ var OptiDOM;
         }
     }
     OptiDOM.Sequence = Sequence;
+    class HTMLDefaultElement extends HTMLOptionElement {
+        constructor() {
+            super();
+            super.hidden = true;
+            this.selected = true;
+        }
+        set hidden(_) {
+            throw new AccessError("Cannot change the hidden property of a HTMLDefaultElement.");
+        }
+        get hidden() {
+            return true;
+        }
+    }
+    OptiDOM.HTMLDefaultElement = HTMLDefaultElement;
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -760,6 +774,53 @@ var OptiDOM;
         return result;
     }
     OptiDOM.generateID = generateID;
+    OptiDOM.features = {
+        buttonHrefs: {
+            _isEnabled: false,
+            // Store the reference to the listener so it can be removed
+            _handler() {
+                document.body.addEventListener("click", this._delegatedClickHandler);
+            },
+            _delegatedClickHandler(event) {
+                var _a;
+                const target = event.target;
+                if ((target === null || target === void 0 ? void 0 : target.tagName) === "BUTTON" && !target.disabled) {
+                    const href = target.getAttribute("href");
+                    if (href)
+                        window.open(href, (_a = target.getAttribute("target")) !== null && _a !== void 0 ? _a : "_self");
+                }
+            },
+            enable() {
+                if (!this._isEnabled) {
+                    this._isEnabled = true;
+                    document.addEventListener("DOMContentLoaded", this._handler);
+                }
+            },
+            disable() {
+                this._isEnabled = false;
+                document.removeEventListener("DOMContentLoaded", this._handler);
+                // Also remove click handlers from buttons (optional but safer for clean-up)
+                const buttons = document.querySelectorAll("button");
+                for (const button of Array.from(buttons)) {
+                    button.removeEventListener("click", this._delegatedClickHandler);
+                }
+            }
+        },
+        enableAll() {
+            Object.entries(this).forEach(([_, feature]) => {
+                if (typeof feature === "object" && typeof feature.enable === "function") {
+                    feature.enable();
+                }
+            });
+        },
+        disableAll() {
+            Object.entries(this).forEach(([_, feature]) => {
+                if (typeof feature === "object" && typeof feature.disable === "function") {
+                    feature.disable();
+                }
+            });
+        },
+    };
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -809,15 +870,15 @@ var OptiDOM;
             else {
                 // Set one value
                 if (key in css) {
-                    css.setProperty(key, value.toString());
+                    css.setProperty(toKebabCase(key), value.toString());
                 }
             }
         }
         else {
             // Set multiple
             for (const [prop, val] of Object.entries(key)) {
-                if (prop in css && val !== null && val !== undefined) {
-                    css.setProperty(prop, val.toString());
+                if (val !== null && val !== undefined) {
+                    css.setProperty(toKebabCase(prop), val.toString());
                 }
             }
         }
@@ -1027,6 +1088,24 @@ var OptiDOM;
     }
     OptiDOM.elementCreator = elementCreator;
     ;
+    function cut() {
+        const clone = document.createElementNS(this.namespaceURI, this.tagName);
+        // Copy all attributes
+        for (const attr of Array.from(this.attributes)) {
+            clone.setAttribute(attr.name, attr.value);
+        }
+        // Deep copy child nodes (preserves text, elements, etc.)
+        for (const child of Array.from(this.childNodes)) {
+            clone.appendChild(child.cloneNode(true));
+        }
+        // Optionally copy inline styles (not always needed if using setAttribute above)
+        if (this instanceof HTMLElement && clone instanceof HTMLElement) {
+            clone.style.cssText = this.style.cssText;
+        }
+        this.remove(); // Remove original from DOM
+        return clone;
+    }
+    OptiDOM.cut = cut;
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -1075,6 +1154,27 @@ var OptiDOM;
     }
     OptiDOM.addEventListeners = addEventListeners;
     ;
+    function delegateEventListener(type, delegator, listener, options) {
+        this.addEventListener(type, function (e) {
+            var _a, _b, _c;
+            const target = e.target;
+            let selector;
+            if (typeof delegator === "string") {
+                selector = delegator;
+            }
+            else if ("tagName" in delegator && typeof delegator.tagName === "string") {
+                selector = delegator.tagName.toLowerCase(); // or a class/id if appropriate
+            }
+            else {
+                selector = (_c = (_b = (_a = delegator.tagName) === null || _a === void 0 ? void 0 : _a.toLowerCase) === null || _b === void 0 ? void 0 : _b.call(_a)) !== null && _c !== void 0 ? _c : "";
+            }
+            const matchedEl = target.closest(selector);
+            if (matchedEl && this instanceof Element && this.contains(matchedEl)) {
+                listener.call(matchedEl, e);
+            }
+        }, options);
+    }
+    OptiDOM.delegateEventListener = delegateEventListener;
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -1258,6 +1358,7 @@ globalThis.Cookie = OptiDOM.Cookie;
 globalThis.Time = OptiDOM.Time;
 globalThis.Sequence = OptiDOM.Sequence;
 globalThis.emitter = OptiDOM.emitter;
+globalThis.features = OptiDOM.features;
 globalThis.isEmpty = OptiDOM.isEmpty;
 globalThis.type = OptiDOM.type;
 globalThis.generateID = OptiDOM.generateID;
@@ -1272,6 +1373,13 @@ globalThis.NotImplementedError = class extends Error {
     constructor(message) {
         super(message !== null && message !== void 0 ? message : "Function not implimented yet.");
         this.name = "NotImplementedError";
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+};
+globalThis.AccessError = class extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "AccessError";
         Object.setPrototypeOf(this, new.target.prototype);
     }
 };
@@ -1348,6 +1456,7 @@ defineGetter(HTMLElement.prototype, "visible", function () {
         ? this.css("display") !== "none"
         : Number(this.css("opacity")) > 0;
 });
+customElements.define("default-option", OptiDOM.HTMLDefaultElement, { extends: "option" });
 /// <reference path="../types/optidom.lib.d.ts" />
 /// <reference path="./classes.ts" />
 /// <reference path="./misc.ts" />

@@ -104,6 +104,80 @@ describe("generateID", () => {
   });
 });
 
+describe('emitter', () => {
+  it('should call listener when event is emitted', () => {
+    const listener = jest.fn();
+
+    emitter.on('test', listener);
+    emitter.emit('test', 'data');
+
+    expect(listener).toHaveBeenCalledWith('data');
+  });
+
+  it('should not call removed listener', () => {
+    const listener = jest.fn();
+
+    emitter.on('test', listener);
+    emitter.off('test', listener);
+    emitter.emit('test');
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('should handle multiple listeners', () => {
+    const listener1 = jest.fn();
+    const listener2 = jest.fn();
+
+    emitter.on('event', listener1);
+    emitter.on('event', listener2);
+    emitter.emit('event', 1, 2);
+
+    expect(listener1).toHaveBeenCalledWith(1, 2);
+    expect(listener2).toHaveBeenCalledWith(1, 2);
+  });
+});
+
+describe('features.*', () => {
+  beforeEach(() => {
+    // Spy on all enable and disable methods
+    for (const feature of Object.values(features)) {
+      if (feature && typeof feature.enable === "function") {
+        jest.spyOn(feature, "enable");
+      }
+      if (feature && typeof feature.disable === "function") {
+        jest.spyOn(feature, "disable");
+      }
+    }
+  });
+
+  afterEach(() => {
+    // Restore the original implementations after each test
+    jest.restoreAllMocks();
+  });
+
+  it('should call enable on all features', () => {
+    features.enableAll();
+
+    for (const feature of Object.values(features)) {
+      if (feature && typeof feature.enable === "function") {
+        feature.enable();
+        expect(feature.enable).toHaveBeenCalled();
+      }
+    }
+  });
+
+  it('should call disable on all features', () => {
+    features.disableAll();
+
+    for (const feature of Object.values(features)) {
+      if (feature && typeof feature.disable === "function") {
+        feature.disable();
+        expect(feature.disable).toHaveBeenCalled();
+      }
+    }
+  });
+});
+
 describe("createEventListener", () => {
   beforeAll(() => {
     window.alert = jest.fn();

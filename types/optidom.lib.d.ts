@@ -312,6 +312,14 @@ interface EventTarget {
     listener: (this: T, e: Event) => any,
     options?: boolean | AddEventListenerOptions
   ): void;
+
+  delegateEventListener<T extends EventTarget, U extends Element, K extends keyof EventMapOf<T>>(
+    this: T,
+    type: K,
+    delegator: HTMLElement | HTMLTag | string,
+    listener: (this: U, e: EventMapOf<T>[K]) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void
 }
 
 interface Element {
@@ -941,8 +949,15 @@ declare function generateID(): ID;
  */
 declare var emitter: EventEmitter;
 
+declare var features: {
+  buttonHrefs: OptiDOMFeature;
+  enableAll(): void;
+  disableAll(): void
+};
+
 declare var UnknownError: ErrorType;
 declare var NotImplementedError: ErrorType;
+declare var AccessError: ErrorType;
 
 declare var Cookie: typeof Cookie;
 declare var LocalStorage: typeof LocalStorage;

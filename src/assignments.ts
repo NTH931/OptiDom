@@ -40,6 +40,7 @@ globalThis.createEventListener = OptiDOM.createEventListener;
 (globalThis as any).Time = OptiDOM.Time;
 (globalThis as any).Sequence = OptiDOM.Sequence;
 globalThis.emitter = OptiDOM.emitter;
+globalThis.features = OptiDOM.features;
 globalThis.isEmpty = OptiDOM.isEmpty;
 globalThis.type = OptiDOM.type;
 globalThis.generateID = OptiDOM.generateID;
@@ -54,6 +55,13 @@ globalThis.NotImplementedError = class extends Error {
   constructor(message?: string) {
     super(message ?? "Function not implimented yet.");
     this.name = "NotImplementedError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+};
+globalThis.AccessError = class extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AccessError";
     Object.setPrototypeOf(this, new.target.prototype);
   }
 };
@@ -150,3 +158,5 @@ defineGetter(HTMLElement.prototype, "visible", function (this: HTMLElement) {
     ? this.css("display") !== "none"
     : Number(this.css("opacity")) > 0;
 });
+
+customElements.define("default-option", OptiDOM.HTMLDefaultElement, { extends: "option" });

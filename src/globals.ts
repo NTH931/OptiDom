@@ -130,4 +130,57 @@ export function generateID(): ID {
   return result as unknown as ID;
 }
 
+export const features: typeof globalThis.features = {
+  buttonHrefs: {
+    _isEnabled: false,
+
+    // Store the reference to the listener so it can be removed
+    _handler() {
+      document.body.addEventListener("click", this._delegatedClickHandler);
+    },
+
+    _delegatedClickHandler(event: MouseEvent) {
+      const target = event.target as HTMLButtonElement;
+      if (target?.tagName === "BUTTON" && !target.disabled) {
+        const href = target.getAttribute("href");
+        if (href) window.open(href, target.getAttribute("target") ?? "_self");
+      }
+    },
+
+    enable() {
+      if (!this._isEnabled) {
+        this._isEnabled = true;
+        document.addEventListener("DOMContentLoaded", this._handler);
+      }
+    },
+
+    disable() {
+      this._isEnabled = false;
+      document.removeEventListener("DOMContentLoaded", this._handler);
+
+      // Also remove click handlers from buttons (optional but safer for clean-up)
+      const buttons = document.querySelectorAll("button") as NodeListOf<HTMLButtonElement>;
+      for (const button of Array.from(buttons)) {
+        button.removeEventListener("click", this._delegatedClickHandler);
+      }
+    }
+  },
+
+  enableAll(): void {
+    Object.entries(this).forEach(([_, feature]) => {
+      if (typeof feature === "object" && typeof feature.enable === "function") {
+        feature.enable();
+      }
+    });
+  },
+
+  disableAll(): void {
+    Object.entries(this).forEach(([_, feature]) => {
+      if (typeof feature === "object" && typeof feature.disable === "function") {
+        feature.disable();
+      }
+    });
+  },
+};
+
 }

@@ -8,19 +8,35 @@ type ID = string & { readonly __brand: unique symbol };
 
 type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
 
-type HTMLTag = keyof HTMLElementTagNameMap;
+type HTMLTag = keyof HTMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap;
 
-type HTMLElementOf<T extends HTMLTag> = HTMLElementTagNameMap[T];
-type SVGElementOf<T extends keyof SVGElementTagNameMap> = SVGElementTagNameMap[T];
-type MathMLElementOf<T extends keyof MathMLElementTagNameMap> = MathMLElementTagNameMap[T];
+type HTMLElementOf<T extends string> = 
+  T extends keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[T] :
+  T extends keyof HTMLElementDeprecatedTagNameMap ? HTMLElementDeprecatedTagNameMap[T] :
+  HTMLElement;
 
-// This type extracts the tag name of an element type
+type SVGElementOf<T extends keyof SVGElementTagNameMap> = 
+  SVGElementTagNameMap[T];
+
+type MathMLElementOf<T extends keyof MathMLElementTagNameMap> = 
+  MathMLElementTagNameMap[T];
+
+// Extract tag name from element type for HTMLElement
 type HTMLElementTagNameOf<T extends HTMLElement> = {
-  [K in keyof HTMLElementTagNameMap]: HTMLElementTagNameMap[K] extends T ? K : never;
-}[keyof HTMLElementTagNameMap];
+  [K in keyof HTMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap]: 
+    K extends keyof HTMLElementTagNameMap
+      ? HTMLElementTagNameMap[K] extends T ? K : never
+      : K extends keyof HTMLElementDeprecatedTagNameMap
+        ? HTMLElementDeprecatedTagNameMap[K] extends T ? K : never
+        : never
+}[keyof HTMLElementTagNameMap | keyof HTMLElementDeprecatedTagNameMap];
+
+// Extract tag name from element type for SVGElement
 type SVGElementTagNameOf<T extends SVGElement> = {
   [K in keyof SVGElementTagNameMap]: SVGElementTagNameMap[K] extends T ? K : never;
 }[keyof SVGElementTagNameMap];
+
+// Extract tag name from element type for MathMLElement
 type MathMLElementTagNameOf<T extends MathMLElement> = {
   [K in keyof MathMLElementTagNameMap]: MathMLElementTagNameMap[K] extends T ? K : never;
 }[keyof MathMLElementTagNameMap];
@@ -181,6 +197,15 @@ type HTMLAttrs = {
   style?: { [key: string]: string };
   [key: string]: any 
 };
+
+/**
+ * @optidom
+ */
+interface OptiDOMFeature {
+  enable(): void;
+  disable(): void;
+  [key: `_${string}`]: any;
+}
 
 /**
  * @optidom
