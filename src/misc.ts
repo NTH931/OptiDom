@@ -8,7 +8,13 @@ export function fromTime (this: Date, time: Time, year: number, monthIndex: numb
   return new Date(year, monthIndex, date, time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
 }
 
-export function clone<T>(object: T, deep?: boolean): T {
+export function clone<T>(object: T, deep: boolean = true): T {
+  if (object === null || typeof object === "undefined") {
+    return object;
+  } else if (typeof object !== "object" && typeof object !== "symbol" && typeof object !== "function") {
+    return object;
+  }
+
   const shallowClone = (): T =>
     Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 

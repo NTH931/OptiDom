@@ -1,8 +1,49 @@
-type ErrorType = (new (message: string) => Error & { name: string });
+//! Errors
+type FunctDynamic<T extends abstract new (...args: any) => any> = (new (...params: ConstructorParameters<T>) => InstanceType<T>);
+
+type ErrorType<T extends abstract new (...args: any) => any> = (new (...params: ConstructorParameters<T>) => InstanceType<T> & { name: string });
+type NamedErrorType = (new (name: string, message: string) => Parameters<typeof OptiDOM.CustomError> & { name: string })
+
+//! Shortcuts
 type ModifierKey = 'ctrl' | 'alt' | 'shift' | 'meta' | 'control' | 'windows' | 'command' | 'search';
 type RegularKey = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'f1' | 'f2' | 'f3' | 'f4' | 'f5' | 'f6' | 'f7' | 'f8' | 'f9' | 'f10' | 'f11' | 'f12' | 'escape' | 'enter' | 'tab' | 'backspace' | 'delete' | 'insert' | 'home' | 'end' | 'pageup' | 'pagedown' | 'arrowup' | 'arrowdown' | 'arrowleft' | 'arrowright' | 'space' | 'plus' | 'minus' | 'equal' | 'bracketleft' | 'bracketright' | 'backslash' | 'semicolon' | 'quote' | 'comma' | 'period' | 'slash';
 type Shortcut = `${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${RegularKey}` | `${ModifierKey}+${ModifierKey}+${ModifierKey}+${RegularKey}`
+type KeyboardEventKey = ModifierKey | RegularKey;
+
+//! Utility Types
 type StringRecord<T> = Record<string, T>;
+
+type ShortcutEventInit = Omit<KeyboardEventInit, "altKey" | "ctrlKey" | "shiftKey" | "metaKey" | "key">
+
+const ANSI_CODES = {
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  dim: "\x1b[2m",
+  underscore: "\x1b[4m",
+  blink: "\x1b[5m",
+  reverse: "\x1b[7m",
+  hidden: "\x1b[8m",
+
+  fgBlack: "\x1b[30m",
+  fgRed: "\x1b[31m",
+  fgGreen: "\x1b[32m",
+  fgYellow: "\x1b[33m",
+  fgBlue: "\x1b[34m",
+  fgMagenta: "\x1b[35m",
+  fgCyan: "\x1b[36m",
+  fgWhite: "\x1b[37m",
+
+  bgBlack: "\x1b[40m",
+  bgRed: "\x1b[41m",
+  bgGreen: "\x1b[42m",
+  bgYellow: "\x1b[43m",
+  bgBlue: "\x1b[44m",
+  bgMagenta: "\x1b[45m",
+  bgCyan: "\x1b[46m",
+  bgWhite: "\x1b[47m",
+} as const;
+
+type ConsoleStyle = keyof typeof ANSI_CODES;
 
 type ID = string & { readonly __brand: unique symbol };
 
@@ -41,23 +82,10 @@ type MathMLElementTagNameOf<T extends MathMLElement> = {
   [K in keyof MathMLElementTagNameMap]: MathMLElementTagNameMap[K] extends T ? K : never;
 }[keyof MathMLElementTagNameMap];
 
-type InputTypeMap = {
-  text: string;
-  number: number;
-  email: string;
-  checkbox: boolean;
-  date: string;
-  color: string;
-  password: string;
-  // extend if you want
-};
-
-type AnyFunc = (...args: any[]) => any;
-
 /** Returns the resulting type(s) of the function(s) given */
-type CallbackResult<T extends AnyFunc | readonly AnyFunc[]> = 
-  T extends AnyFunc ? ReturnType<T> : 
-  T extends readonly [...infer R] ? R extends AnyFunc[] ? { [K in keyof R]: ReturnType<T[K]> } : never : never;
+type CallbackResult<T extends ((...args: any[]) => any) | readonly ((...args: any[]) => any)[]> = 
+  T extends ((...args: any[]) => any) ? ReturnType<T> : 
+  T extends readonly [...infer R] ? R extends ((...args: any[]) => any)[] ? { [K in keyof R]: ReturnType<T[K]> } : never : never;
 
 type EventMapOf<T> =
   T extends HTMLVideoElement ? HTMLVideoElementEventMap :
@@ -162,6 +190,8 @@ type EventMapOf<T> =
 
   GlobalEventHandlersEventMap; // fallback
 
+
+//! Interfaces
 /**
  * @optidom
  * @deprecated

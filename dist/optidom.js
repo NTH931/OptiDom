@@ -485,13 +485,21 @@ var OptiDOM;
             this.selected = true;
         }
         set hidden(_) {
-            throw new AccessError("Cannot change the hidden property of a HTMLDefaultElement.");
+            throw new OptiDOM.AccessError("Cannot change the hidden property of a HTMLDefaultElement.");
         }
         get hidden() {
             return true;
         }
     }
     OptiDOM.HTMLDefaultElement = HTMLDefaultElement;
+    class ShortcutEvent extends KeyboardEvent {
+        constructor(keys, eventInit) {
+            const lastKey = keys[keys.length - 1] || "";
+            super("keydown", Object.assign(Object.assign({}, eventInit), { key: lastKey }));
+            this.keys = keys;
+        }
+    }
+    OptiDOM.ShortcutEvent = ShortcutEvent;
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -503,7 +511,13 @@ var OptiDOM;
         return new Date(year, monthIndex, date, time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
     }
     OptiDOM.fromTime = fromTime;
-    function clone(object, deep) {
+    function clone(object, deep = true) {
+        if (object === null || typeof object === "undefined") {
+            return object;
+        }
+        else if (typeof object !== "object" && typeof object !== "symbol" && typeof object !== "function") {
+            return object;
+        }
         const shallowClone = () => Object.assign(Object.create(Object.getPrototypeOf(object)), object);
         const deepClone = (obj, seen = new WeakMap()) => {
             if (obj === null || typeof obj !== "object")
@@ -695,6 +709,97 @@ var OptiDOM;
     }
     OptiDOM.type = type;
     ;
+    // Mapping of style keywords to ANSI escape codes for terminal formatting
+    const styles = {
+        red: "\x1b[31m",
+        orange: "\x1b[38;5;208m", // extended ANSI orange
+        yellow: "\x1b[33m",
+        green: "\x1b[32m",
+        cyan: "\x1b[36m",
+        blue: "\x1b[34m",
+        purple: "\x1b[35m",
+        pink: "\x1b[38;5;205m", // extended ANSI pink
+        underline: "\x1b[4m",
+        bold: "\x1b[1m",
+        strikethrough: "\x1b[9m",
+        italic: "\x1b[3m",
+        emphasis: "\x1b[3m", // alias for italic
+        reset: "\x1b[0m",
+    };
+    function Colorize(strings, ...values) {
+        // Combine all parts of the template string with interpolated values
+        let input = strings.reduce((acc, str, i) => { var _a; return acc + str + ((_a = values[i]) !== null && _a !== void 0 ? _a : ""); }, "");
+        // Replace shorthand syntax for bold and underline
+        // Replace {_..._} and {*...*} with {underline:...}, and {**...**} with {bold:...}
+        input = input
+            .replace(/\{_([^{}]+)_\}/g, (_, content) => `{underline:${content}}`)
+            .replace(/\{\*\*([^{}]+)\*\*\}/g, (_, content) => `{bold:${content}}`)
+            .replace(/\{\*([^{}]+)\*\}/g, (_, content) => `{underline:${content}}`)
+            .replace(/\\x1b/g, '\x1b');
+        // Replace escaped braces \{ and \} with placeholders so they are not parsed as tags
+        input = input.replace(/\\\{/g, "__ESCAPED_OPEN_BRACE__").replace(/\\\}/g, "__ESCAPED_CLOSE_BRACE__");
+        let output = ""; // Final output string with ANSI codes
+        const stack = []; // Stack to track open styles for proper nesting
+        let i = 0; // Current index in input
+        while (i < input.length) {
+            // Match the start of a style tag like {red: or {(dynamic ANSI code):
+            const openMatch = input.slice(i).match(/^\{([a-zA-Z]+|\([^)]+\)):/);
+            if (openMatch) {
+                let tag = openMatch[1];
+                if (tag.startsWith("(") && tag.endsWith(")")) {
+                    // Dynamic ANSI escape code inside parentheses
+                    tag = tag.slice(1, -1); // remove surrounding parentheses
+                    stack.push("__dynamic__");
+                    output += tag; // Insert raw ANSI code directly
+                }
+                else {
+                    if (!styles[tag]) {
+                        throw new ColorizedSyntaxError(`Unknown style: ${tag}`);
+                    }
+                    stack.push(tag);
+                    output += styles[tag];
+                }
+                i += openMatch[0].length; // Move index past the opening tag
+                continue;
+            }
+            // Match closing tag '}'
+            if (input[i] === "}") {
+                if (!stack.length) {
+                    // No corresponding opening tag
+                    throw new ColorizedSyntaxError(`Unexpected closing tag at index ${i}`);
+                }
+                stack.pop(); // Close the last opened tag
+                output += styles.reset; // Reset styles
+                // Re-apply all remaining styles still on the stack
+                for (const tag of stack) {
+                    // Reapply dynamic codes as-is, else mapped styles
+                    output += tag === "__dynamic__" ? "" : styles[tag];
+                }
+                i++; // Move past closing brace
+                continue;
+            }
+            // Append normal character to output, but restore escaped braces if needed
+            if (input.startsWith("__ESCAPED_OPEN_BRACE__", i)) {
+                output += "{";
+                i += "__ESCAPED_OPEN_BRACE__".length;
+                continue;
+            }
+            if (input.startsWith("__ESCAPED_CLOSE_BRACE__", i)) {
+                output += "}";
+                i += "__ESCAPED_CLOSE_BRACE__".length;
+                continue;
+            }
+            output += input[i++];
+        }
+        // If stack is not empty, we have unclosed tags
+        if (stack.length) {
+            const lastUnclosed = stack[stack.length - 1];
+            throw new ColorizedSyntaxError(`Missing closing tag for: ${lastUnclosed}`);
+        }
+        // Ensure final reset for safety
+        return output + styles.reset;
+    }
+    OptiDOM.Colorize = Colorize;
     function isEmpty(val) {
         // Generic type checking
         // eslint-disable-next-line eqeqeq
@@ -821,6 +926,49 @@ var OptiDOM;
             });
         },
     };
+    class ColorizedSyntaxError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = "ColorizedSyntaxError";
+        }
+    }
+    OptiDOM.ColorizedSyntaxError = ColorizedSyntaxError;
+    class UnknownError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = "UnknownError";
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+    OptiDOM.UnknownError = UnknownError;
+    ;
+    class NotImplementedError extends Error {
+        constructor(message) {
+            super(message !== null && message !== void 0 ? message : "Function not implimented yet.");
+            this.name = "NotImplementedError";
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+    OptiDOM.NotImplementedError = NotImplementedError;
+    ;
+    class AccessError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = "AccessError";
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+    OptiDOM.AccessError = AccessError;
+    ;
+    class CustomError extends Error {
+        constructor(name, message) {
+            super(message);
+            this.name = name;
+            Object.setPrototypeOf(this, new.target.prototype);
+        }
+    }
+    OptiDOM.CustomError = CustomError;
+    ;
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -890,26 +1038,29 @@ var OptiDOM;
     }
     OptiDOM.getParent = getParent;
     ;
-    function getAncestor(level) {
-        let ancestor = this;
-        for (let i = 0; i < level; i++) {
-            if (ancestor.parentNode === null)
-                return null;
-            ancestor = ancestor.parentNode;
+    function getAncestor(arg) {
+        // Case 1: numeric level
+        if (typeof arg === "number") {
+            let node = this;
+            for (let i = 0; i < arg; i++) {
+                if (!(node === null || node === void 0 ? void 0 : node.parentNode))
+                    return null;
+                node = node.parentNode;
+            }
+            return node;
         }
-        return ancestor;
-    }
-    OptiDOM.getAncestor = getAncestor;
-    ;
-    function querySelectAncestor(selector) {
-        const element = document.querySelector(selector);
-        if (element === null || element === void 0 ? void 0 : element.contains(this)) {
-            return element;
+        // Case 2: selector string
+        const selector = arg;
+        let el = this instanceof Element ? this : this.parentElement;
+        while (el) {
+            if (el.matches(selector)) {
+                return el;
+            }
+            el = el.parentElement;
         }
         return null;
     }
-    OptiDOM.querySelectAncestor = querySelectAncestor;
-    ;
+    OptiDOM.getAncestor = getAncestor;
     function createChildren(elements) {
         const element = document.createElement(elements.element);
         if (elements.id) {
@@ -1193,6 +1344,7 @@ var OptiDOM;
     function bindShortcut(shortcut, callback) {
         document.addEventListener('keydown', (event) => {
             const keyboardEvent = event;
+            keyboardEvent.keys = shortcut.split("+");
             const keys = shortcut
                 .trim()
                 .toLowerCase()
@@ -1357,35 +1509,21 @@ globalThis.SessionStorage = OptiDOM.SessionStorage;
 globalThis.Cookie = OptiDOM.Cookie;
 globalThis.Time = OptiDOM.Time;
 globalThis.Sequence = OptiDOM.Sequence;
+globalThis.ShortcutEvent = OptiDOM.ShortcutEvent;
 globalThis.emitter = OptiDOM.emitter;
 globalThis.features = OptiDOM.features;
 globalThis.isEmpty = OptiDOM.isEmpty;
 globalThis.type = OptiDOM.type;
 globalThis.generateID = OptiDOM.generateID;
-globalThis.UnknownError = class extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "UnknownError";
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-};
-globalThis.NotImplementedError = class extends Error {
-    constructor(message) {
-        super(message !== null && message !== void 0 ? message : "Function not implimented yet.");
-        this.name = "NotImplementedError";
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-};
-globalThis.AccessError = class extends Error {
-    constructor(message) {
-        super(message);
-        this.name = "AccessError";
-        Object.setPrototypeOf(this, new.target.prototype);
-    }
-};
+globalThis.Colorize = OptiDOM.Colorize;
+globalThis.UnknownError = OptiDOM.UnknownError;
+globalThis.NotImplementedError = OptiDOM.NotImplementedError;
+globalThis.AccessError = OptiDOM.AccessError;
+globalThis.CustomError = OptiDOM.CustomError;
+globalThis.ColorizedSyntaxError = OptiDOM.ColorizedSyntaxError;
 Document.prototype.ready = OptiDOM.ready;
 /*! Not Working */ Document.prototype.leaving = OptiDOM.leaving;
-Document.prototype.elementCreator = OptiDOM.elementCreatorDocument;
+/*! Deprecated */ Document.prototype.elementCreator = OptiDOM.elementCreatorDocument;
 Document.prototype.bindShortcut = OptiDOM.bindShortcut;
 Document.prototype.css = OptiDOM.documentCss;
 Document.prototype.createElementTree = OptiDOM.createElementTree;
@@ -1436,14 +1574,13 @@ Node.prototype.getParent = OptiDOM.getParent;
 Node.prototype.getAncestor = OptiDOM.getAncestor;
 Node.prototype.getChildren = OptiDOM.getChildren;
 Node.prototype.getSiblings = OptiDOM.getSiblings;
-Node.prototype.querySelectAncestor = OptiDOM.querySelectAncestor;
-Node.prototype.find = OptiDOM.find;
-Node.prototype.findAll = OptiDOM.findAll;
+Node.prototype.$ = OptiDOM.find;
+Node.prototype.$$ = OptiDOM.findAll;
 Math.random = OptiDOM.random;
 Object.clone = OptiDOM.clone;
 Object.forEach = OptiDOM.forEach;
 Number.prototype.repeat = OptiDOM.repeat;
-JSON.parseFile = OptiDOM.parseFile;
+/* Untestable */ JSON.parseFile = OptiDOM.parseFile;
 Array.prototype.unique = OptiDOM.unique;
 Array.prototype.chunk = OptiDOM.chunk;
 String.prototype.remove = OptiDOM.remove;
@@ -1455,6 +1592,10 @@ defineGetter(HTMLElement.prototype, "visible", function () {
     return this.css("visibility") !== "hidden"
         ? this.css("display") !== "none"
         : Number(this.css("opacity")) > 0;
+});
+defineGetter(Object.prototype, "__type", function () {
+    // Placeholder
+    return this.constructor.name;
 });
 customElements.define("default-option", OptiDOM.HTMLDefaultElement, { extends: "option" });
 /// <reference path="../types/optidom.lib.d.ts" />

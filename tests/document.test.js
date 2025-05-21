@@ -1,5 +1,9 @@
 /// <reference path="../types/optidom.lib.d.ts" />
 
+beforeEach(() => {
+  document.body.innerHTML = "";
+});
+
 describe("Document.ready", () => {
   it("should run when the document is loaded", () => {
     window.dispatchEvent(new Event("load"));
@@ -40,4 +44,37 @@ describe("Document.css", () => {
     expect(styles).toHaveProperty("color");
     expect(styles.color).toBe("red");
   });
+});
+
+describe("Document.bindShortcut", () => {
+  it("should bind a shortcut to the document", () => {
+    let flag = false;
+
+    document.bindShortcut("ctrl+shift+0", () => {
+      flag = true;
+    });
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "0", ctrlKey: true, shiftKey: true }));
+    expect(flag).toBeTruthy();
+  });
+});
+
+describe("Document.createElementTree", () => {
+  it("should create an element cascade and append to the body", () => {
+  const el = document.createElementTree({ 
+    tag: "div", 
+    children: { tag: "a" }
+  });
+
+  document.body.appendChild(el);
+
+  const divs = document.body.getElementsByTagName("div");
+  expect(divs).toHaveLength(1);
+
+  const anchors = divs[0].getElementsByTagName("a");
+  expect(anchors).toHaveLength(1);
+
+  // Optional: check if the created div is actually a child of body
+  expect(document.body.contains(el)).toBeTruthy();
+});
 });

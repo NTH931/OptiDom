@@ -39,37 +39,23 @@ globalThis.createEventListener = OptiDOM.createEventListener;
 (globalThis as any).Cookie = OptiDOM.Cookie;
 (globalThis as any).Time = OptiDOM.Time;
 (globalThis as any).Sequence = OptiDOM.Sequence;
+(globalThis as any).ShortcutEvent = OptiDOM.ShortcutEvent;
 globalThis.emitter = OptiDOM.emitter;
 globalThis.features = OptiDOM.features;
 globalThis.isEmpty = OptiDOM.isEmpty;
 globalThis.type = OptiDOM.type;
 globalThis.generateID = OptiDOM.generateID;
-globalThis.UnknownError = class extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UnknownError";
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-};
-globalThis.NotImplementedError = class extends Error {
-  constructor(message?: string) {
-    super(message ?? "Function not implimented yet.");
-    this.name = "NotImplementedError";
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-};
-globalThis.AccessError = class extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AccessError";
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-};
+globalThis.Colorize = OptiDOM.Colorize;
+globalThis.UnknownError = OptiDOM.UnknownError;
+globalThis.NotImplementedError = OptiDOM.NotImplementedError;
+globalThis.AccessError = OptiDOM.AccessError;
+globalThis.CustomError = OptiDOM.CustomError;
+globalThis.ColorizedSyntaxError = OptiDOM.ColorizedSyntaxError;
 
 
 Document.prototype.ready = OptiDOM.ready;
 /*! Not Working */ Document.prototype.leaving = OptiDOM.leaving;
-Document.prototype.elementCreator = OptiDOM.elementCreatorDocument;
+/*! Deprecated */ Document.prototype.elementCreator = OptiDOM.elementCreatorDocument;
 Document.prototype.bindShortcut = OptiDOM.bindShortcut;
 Document.prototype.css = OptiDOM.documentCss;
 Document.prototype.createElementTree = OptiDOM.createElementTree;
@@ -129,9 +115,8 @@ Node.prototype.getParent = OptiDOM.getParent;
 Node.prototype.getAncestor = OptiDOM.getAncestor;
 Node.prototype.getChildren = OptiDOM.getChildren;
 Node.prototype.getSiblings = OptiDOM.getSiblings;
-Node.prototype.querySelectAncestor = OptiDOM.querySelectAncestor;
-Node.prototype.find = OptiDOM.find;
-Node.prototype.findAll = OptiDOM.findAll;
+Node.prototype.$ = OptiDOM.find;
+Node.prototype.$$ = OptiDOM.findAll;
 
 Math.random = OptiDOM.random;
 
@@ -140,7 +125,7 @@ Object.forEach = OptiDOM.forEach;
 
 Number.prototype.repeat = OptiDOM.repeat;
 
-JSON.parseFile = OptiDOM.parseFile;
+/* Untestable */ JSON.parseFile = OptiDOM.parseFile;
 
 Array.prototype.unique = OptiDOM.unique;
 Array.prototype.chunk = OptiDOM.chunk;
@@ -157,6 +142,11 @@ defineGetter(HTMLElement.prototype, "visible", function (this: HTMLElement) {
   return this.css("visibility") !== "hidden"
     ? this.css("display") !== "none"
     : Number(this.css("opacity")) > 0;
+});
+
+defineGetter(Object.prototype, "__type", function(this: Object) {
+  // Placeholder
+  return this.constructor.name;
 });
 
 customElements.define("default-option", OptiDOM.HTMLDefaultElement, { extends: "option" });

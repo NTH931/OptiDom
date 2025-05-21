@@ -14,10 +14,12 @@ export function elementCreatorDocument (superEl: keyof HTMLElementTagNameMap, at
 
 export function bindShortcut (
   shortcut: Shortcut,
-  callback: (event: KeyboardEvent) => void
+  callback: (event: ShortcutEvent) => void
 ): void {
   document.addEventListener('keydown', (event: Event) => {
-    const keyboardEvent = event as KeyboardEvent;
+    const keyboardEvent = event as ShortcutEvent;
+    keyboardEvent.keys = shortcut.split("+") as [KeyboardEventKey, KeyboardEventKey, KeyboardEventKey?, KeyboardEventKey?, KeyboardEventKey?];
+
     const keys = shortcut
       .trim()
       .toLowerCase()

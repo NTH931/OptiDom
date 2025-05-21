@@ -117,3 +117,11 @@ declare class Sequence {
 
   add(...functions: ((...args: any[]) => any)[]): this;
 }
+
+declare class ShortcutEvent extends KeyboardEvent {
+  keys: [KeyboardEventKey, KeyboardEventKey, KeyboardEventKey?, KeyboardEventKey?];
+  constructor(
+    keys: [KeyboardEventKey, KeyboardEventKey?, KeyboardEventKey?, KeyboardEventKey?, KeyboardEventKey?],
+    eventInit?: ShortcutEventInit
+  )
+}

@@ -1,21 +1,6 @@
 /// <reference path="../types/optidom.lib.d.ts" />
 
-describe("NodeList.addEventListener", () => {
-  /** @type {NodeList} */
-  let nodeList;
-
-  beforeEach(() => {
-    document.body.append(document.createElement('div'));
-    document.body.append(document.createElement('div'));
-    nodeList = document.querySelectorAll('div');
-  });
-
-  it("should be defined", () => {
-    expect(nodeList.addEventListener).toBeDefined();
-  });
-});
-
-describe("NodeList.addClass", () => {
+describe("NodeList.addClass, NodeList.removeClass, NodeList.toggleClass", () => {
   /** @type {NodeList} */
   let nodeList;
 
@@ -31,8 +16,14 @@ describe("NodeList.addClass", () => {
 
   it("should add the class to each element", () => {
     nodeList.addClass('new-class');
-    expect(nodeList[0].classList.contains('new-class')).toBe(true);
-    expect(nodeList[1].classList.contains('new-class')).toBe(true);
+    expect(nodeList[0].classList.contains('new-class')).toBeTruthy();
+    expect(nodeList[1].classList.contains('new-class')).toBeTruthy();
+  });
+
+  it("should add the class to each element", () => {
+    nodeList.removeClass('item');
+    expect(nodeList[0].classList.contains('item')).toBeFalsy();
+    expect(nodeList[1].classList.contains('item')).toBeFalsy();
   });
 });
 
@@ -58,22 +49,7 @@ describe("NodeList.single", () => {
   });
 });
 
-describe("HTMLCollection.addEventListener", () => {
-  /** @type {HTMLCollectionOf<HTMLDivElement>} */
-  let htmlCollection;
-
-  beforeEach(() => {
-    document.body.append(document.createElement('div'));
-    document.body.append(document.createElement('div'));
-    htmlCollection = document.getElementsByTagName('div');
-  });
-
-  it("should be defined", () => {
-    expect(htmlCollection.addEventListener).toBeDefined();
-  });
-});
-
-describe("HTMLCollection.addClass", () => {
+describe("HTMLCollection.addClass, HTMLCollection.removeClass, HTMLCollection.toggleClass", () => {
   /** @type {HTMLCollectionOf<HTMLDivElement>} */
   let htmlCollection;
 
@@ -89,8 +65,14 @@ describe("HTMLCollection.addClass", () => {
 
   it("should add the class to each element", () => {
     htmlCollection.addClass('new-class');
-    expect(htmlCollection[0].classList.contains('new-class')).toBe(true);
-    expect(htmlCollection[1].classList.contains('new-class')).toBe(true);
+    expect(htmlCollection[0].classList.contains('new-class')).toBeTruthy();
+    expect(htmlCollection[1].classList.contains('new-class')).toBeTruthy();
+  });
+
+  it("should add the class to each element", () => {
+    htmlCollection.removeClass('item');
+    expect(htmlCollection[0].classList.contains('item')).toBeFalsy();
+    expect(htmlCollection[1].classList.contains('item')).toBeFalsy();
   });
 });
 

@@ -10,16 +10,16 @@ describe("Element.hasText", () => {
 
   it("should return true if the text matches", () => {
     element.textContent = "Hello, World!";
-    expect(element.hasText("Hello, World!")).toBe(true);
+    expect(element.hasText("Hello, World!")).toBeTruthy();
   });
 
   it("should return false if the test does not match", () => {
     element.textContent = "Hello, World!";
-    expect(element.hasText("Hello World!")).toBe(false);
+    expect(element.hasText("Hello World!")).toBeFalsy();
   });
 });
 
-describe("Element.text", () => {
+describe("Element.txt", () => {
   /** @type {Element} */
   let element;
 
@@ -48,7 +48,7 @@ describe("Element.addClass", () => {
 
   it("should add a class to the element", () => {
     element.addClass('test-class');
-    expect(element.classList.contains('test-class')).toBe(true);
+    expect(element.classList.contains('test-class')).toBeTruthy();
   });
 });
 
@@ -63,7 +63,7 @@ describe("Element.removeClass", () => {
 
   it("should remove a class from the element", () => {
     element.removeClass('test-class');
-    expect(element.classList.contains('test-class')).toBe(false);
+    expect(element.classList.contains('test-class')).toBeFalsy();
   });
 });
 
@@ -77,9 +77,9 @@ describe("Element.toggleClass", () => {
 
   it("should toggle a class on the element", () => {
     element.toggleClass('test-class');
-    expect(element.classList.contains('test-class')).toBe(true);
+    expect(element.classList.contains('test-class')).toBeTruthy();
     element.toggleClass('test-class');
-    expect(element.classList.contains('test-class')).toBe(false);
+    expect(element.classList.contains('test-class')).toBeFalsy();
   });
 });
 
@@ -93,11 +93,11 @@ describe("Element.hasClass", () => {
 
   it("should return true if the element has the specified class", () => {
     element.classList.add('test-class');
-    expect(element.hasClass('test-class')).toBe(true);
+    expect(element.hasClass('test-class')).toBeTruthy();
   });
 
   it("should return false if the element does not have the specified class", () => {
-    expect(element.hasClass('test-class')).toBe(false);
+    expect(element.hasClass('test-class')).toBeFalsy();
   });
 });
 

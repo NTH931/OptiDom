@@ -1,5 +1,4 @@
 /// <reference path="../types/optidom.lib.d.ts" />
-import {jest} from '@jest/globals';
 
 describe('type', () => {
   it('should return the data type for a data type\'s input', () => {
@@ -48,6 +47,111 @@ describe('type', () => {
   it('should return "Date" for an invalid Date input', () => {
     const invalidDate = new Date('invalid-date');
     expect(type(invalidDate)).toBe("Date");
+  });
+});
+
+describe('Colorize', () => {
+  // Helper regex to check ANSI codes for styles
+  const ansiCodes = {
+    red: '\x1b[31m',
+    orange: '\x1b[38;5;208m',
+    yellow: '\x1b[33m',
+    green: '\x1b[32m',
+    cyan: '\x1b[36m',
+    blue: '\x1b[34m',
+    purple: '\x1b[35m',
+    pink: '\x1b[38;5;205m',
+    bold: '\x1b[1m',
+    underline: '\x1b[4m',
+    strikethrough: '\x1b[9m',
+    italic: '\x1b[3m',
+    reset: '\x1b[0m',
+  };
+
+  test('Basic colors', () => {
+    expect(Colorize`{red:This is red text}`).toContain(ansiCodes.red);
+    expect(Colorize`{orange:Bright orange color}`).toContain(ansiCodes.orange);
+    expect(Colorize`{yellow:Yellow text example}`).toContain(ansiCodes.yellow);
+    expect(Colorize`{green:Green is calm}`).toContain(ansiCodes.green);
+    expect(Colorize`{cyan:Cyan looks cool}`).toContain(ansiCodes.cyan);
+    expect(Colorize`{blue:Blue skies ahead}`).toContain(ansiCodes.blue);
+    expect(Colorize`{purple:Purple power!}`).toContain(ansiCodes.purple);
+    expect(Colorize`{pink:Pretty in pink}`).toContain(ansiCodes.pink);
+  });
+
+  test('Text styles', () => {
+    expect(Colorize`{bold:This text is bold}`).toContain(ansiCodes.bold);
+    expect(Colorize`{underline:This text is underlined}`).toContain(ansiCodes.underline);
+    expect(Colorize`{strikethrough:Strike this text out}`).toContain(ansiCodes.strikethrough);
+    expect(Colorize`{italic:Italic style}`).toContain(ansiCodes.italic);
+    expect(Colorize`{emphasis:Emphasis is italic too}`).toContain(ansiCodes.italic);
+  });
+
+  test('Mixing and nesting styles', () => {
+    const mixed = Colorize`Mixing styles {red:red and {bold:bold red} back to red}`;
+    expect(mixed).toContain(ansiCodes.red);
+    expect(mixed).toContain(ansiCodes.bold);
+
+    const nested = Colorize`Nested {green:green {underline:underlined} and normal}`;
+    expect(nested).toContain(ansiCodes.green);
+    expect(nested).toContain(ansiCodes.underline);
+  });
+
+  test('Dynamic ANSI code', () => {
+    const dynamic = Colorize`Dynamic ANSI {(\\x1b[35m):Custom magenta color}`;
+    expect(dynamic).toContain('\x1b[35m');
+  });
+
+  test('Shorthand underline and bold', () => {
+    const shorthand = Colorize`Shorthand underline {_underlined_} and bold {**bold**} also {*underline*}`;
+    expect(shorthand).toContain(ansiCodes.underline);
+    expect(shorthand).toContain(ansiCodes.bold);
+  });
+
+  test('Escaped braces', () => {
+    const escaped = Colorize`Escaped braces \\{this is not a tag\\} and {blue:blue text}`;
+    expect(escaped).toContain('{this is not a tag}');
+    expect(escaped).toContain(ansiCodes.blue);
+  });
+
+  test('Multiple nested styles', () => {
+    const multiNested = Colorize`Multiple nested styles {cyan:{underline:underlined cyan} and {bold:bold cyan}}`;
+    expect(multiNested).toContain(ansiCodes.cyan);
+    expect(multiNested).toContain(ansiCodes.underline);
+    expect(multiNested).toContain(ansiCodes.bold);
+  });
+
+  test('Complex nesting', () => {
+    const complex = Colorize`Complex example: {red:Red {underline:underlined {bold:bold underlined} back} red}`;
+    expect(complex).toContain(ansiCodes.red);
+    expect(complex).toContain(ansiCodes.underline);
+    expect(complex).toContain(ansiCodes.bold);
+  });
+
+  test('No tags (plain text)', () => {
+    const plain = Colorize`Edge case: text with no tags at all`;
+    expect(plain).toBe('Edge case: text with no tags at all' + ansiCodes.reset);
+  });
+
+  test('Strikethrough', () => {
+    const strike = Colorize`Use strikethrough {strikethrough:this is crossed out}`;
+    expect(strike).toContain(ansiCodes.strikethrough);
+  });
+
+  test('Throws on missing closing tag for shorthand', () => {
+    expect(() => Colorize`{_missing closing}`).toThrow(ColorizedSyntaxError);
+    expect(() => Colorize`{**missing closing}`).toThrow(ColorizedSyntaxError);
+    expect(() => Colorize`{*missing closing}`).toThrow(ColorizedSyntaxError);
+  });
+
+  test('Throws on unknown style', () => {
+    expect(() => Colorize`{unknown:this should fail}`).toThrow(ColorizedSyntaxError);
+  });
+});
+
+describe("ShortcutEvent", () => {
+  it("should make a new shortcut event", () => {
+    expect(new ShortcutEvent(["ctrl", "shift", "0"]));
   });
 });
 
@@ -231,5 +335,26 @@ describe("NotImplementedError", () => {
   it("should use provided message", () => {
     const err = new NotImplementedError("custom");
     expect(err.message).toBe("custom");
+  });
+});
+
+describe("AccessError", () => {
+  it("should extend Error with default message", () => {
+    const err = new AccessError();
+    expect(err).toBeInstanceOf(Error);
+    expect(err.name).toBe("AccessError");
+    expect(err.message).toBe("");
+  });
+
+  it("should use provided message", () => {
+    const err = new AccessError("custom");
+    expect(err.message).toBe("custom");
+  });
+});
+
+describe("CustomError", () => {
+  it("should be an error", () => {
+    expect(new CustomError()).toBeInstanceOf(Error);
+    expect(new CustomError());
   });
 });

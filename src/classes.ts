@@ -558,4 +558,17 @@ export class HTMLDefaultElement extends HTMLOptionElement {
   }
 }
 
+export class ShortcutEvent extends KeyboardEvent {
+  keys: [KeyboardEventKey, KeyboardEventKey, KeyboardEventKey?, KeyboardEventKey?, KeyboardEventKey?];
+
+  constructor(
+    keys: [KeyboardEventKey, KeyboardEventKey, KeyboardEventKey?, KeyboardEventKey?, KeyboardEventKey?],
+    eventInit?: ShortcutEventInit
+  ) {
+    const lastKey = keys[keys.length - 1] || "";
+    super("keydown", { ...eventInit, key: lastKey });
+    this.keys = keys;
+  }
+}
+
 }

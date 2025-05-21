@@ -202,14 +202,13 @@ interface Node {
    * console.log("Target: " + target);
    */
   getAncestor(this: Node, level: number): Node | null;
-
   /** 
    * Gets the element's ancestor (ancestor selected is based on the css selector) 
    * @optidom
    * @param selector The selector used to get the ancestor
    * @returns The parent element
    */
-  querySelectAncestor<T extends Element>(this: Element, selector: string): T | null;
+  getAncestor<T extends Element>(this: Element, selector: string): T | null
 
   /**
    * Finds children based on the selector specified
@@ -219,12 +218,12 @@ interface Node {
    * const el = document.$("#parent");
    * el.txt("Parent");
    * 
-   * el.find(".hidden").removeClass("hidden");
+   * el.$(".hidden").removeClass("hidden");
    */
-  find<K extends keyof HTMLElementTagNameMap>(selector: K): HTMLElementTagNameMap[K] | null;
-  find<K extends keyof SVGElementTagNameMap>(selector: K): SVGElementTagNameMap[K] | null;
-  find<K extends keyof MathMLElementTagNameMap>(selector: K): MathMLElementTagNameMap[K] | null;
-  find<E extends Element = Element>(selector: string): E | null;
+  $<K extends keyof HTMLElementTagNameMap>(selector: K): HTMLElementTagNameMap[K] | null;
+  $<K extends keyof SVGElementTagNameMap>(selector: K): SVGElementTagNameMap[K] | null;
+  $<K extends keyof MathMLElementTagNameMap>(selector: K): MathMLElementTagNameMap[K] | null;
+  $<E extends Element = Element>(selector: string): E | null;
 
   /**
    * Finds children based on the selector specified
@@ -234,12 +233,12 @@ interface Node {
    * const el = document.$("#parent");
    * el.txt("Parent");
    * 
-   * el.find(".hidden", true).removeClass("hidden");
+   * el.$$(".hidden", true).removeClass("hidden");
    */
-  findAll<K extends keyof HTMLElementTagNameMap>(selector: K): NodeListOf<HTMLElementTagNameMap[K]>;
-  findAll<K extends keyof SVGElementTagNameMap>(selector: K): NodeListOf<SVGElementTagNameMap[K]>;
-  findAll<K extends keyof MathMLElementTagNameMap>(selector: K): NodeListOf<MathMLElementTagNameMap[K]>;
-  findAll<E extends Element = Element>(selector: string): NodeListOf<E>;
+  $$<K extends keyof HTMLElementTagNameMap>(selector: K): NodeListOf<HTMLElementTagNameMap[K]>;
+  $$<K extends keyof SVGElementTagNameMap>(selector: K): NodeListOf<SVGElementTagNameMap[K]>;
+  $$<K extends keyof MathMLElementTagNameMap>(selector: K): NodeListOf<MathMLElementTagNameMap[K]>;
+  $$<E extends Element = Element>(selector: string): NodeListOf<E>;
 }
 
 interface EventTarget {
@@ -752,6 +751,10 @@ interface Math {
   random(min: number, max: number): number
 }
 
+interface Object {
+  __type: string;
+}
+
 interface ObjectConstructor {
   /**
    * Clones an object
@@ -879,7 +882,7 @@ declare function f(iife: () => void): void;
  *   console.log(conf); // Logs return value returned
  * });
  */
-declare function createEventListener<T extends AnyFunc[]>(
+declare function createEventListener<T extends ((...args: any[]) => any)[]>(
   triggers: [...T], 
   callback: (...results: CallbackResult<T>) => void
 ): void;
@@ -943,6 +946,8 @@ declare function type(val: any): string;
  */
 declare function generateID(): ID;
 
+declare function Colorize(strings: TemplateStringsArray, ...values: any[]): string;
+
 /**
  * The global event emitter instance
  * @optidom
@@ -955,13 +960,15 @@ declare var features: {
   disableAll(): void
 };
 
-declare var UnknownError: ErrorType;
-declare var NotImplementedError: ErrorType;
-declare var AccessError: ErrorType;
+declare var UnknownError: ErrorType<typeof OptiDOM.UnknownError>;
+declare var NotImplementedError: ErrorType<typeof OptiDOM.NotImplementedError>;
+declare var AccessError: ErrorType<typeof OptiDOM.AccessError>;
+declare var ColorizedSyntaxError: ErrorType<typeof OptiDOM.ColorizedSyntaxError>;
+declare var CustomError: ErrorType<typeof OptiDOM.CustomError>;
 
 declare var Cookie: typeof Cookie;
 declare var LocalStorage: typeof LocalStorage;
 declare var SessionStorage: typeof SessionStorage;
 declare var Time: typeof Time;
 declare var Sequence: typeof Sequence;
-declare var optidom: OptiDOM;
+declare var ShortcutEvent: typeof ShortcutEvent;

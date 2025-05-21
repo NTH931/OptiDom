@@ -67,28 +67,30 @@ export function getParent (this: Node): Node | null {
   return this.parentElement;
 };
 
-export function getAncestor (this: Node, level: number): Node | null {
-  let ancestor: Node = this;
-
-  for (let i = 0; i < level; i++) {
-    if (ancestor.parentNode === null) return null;
-
-    ancestor = ancestor.parentNode;
+export function getAncestor<T extends Element>(this: Element, selector: string): T | null;
+export function getAncestor(this: Node, level: number): Node | null;
+export function getAncestor<T extends Element>(this: Node, arg: string | number): T | Node | null {
+  // Case 1: numeric level
+  if (typeof arg === "number") {
+    let node: Node | null = this;
+    for (let i = 0; i < arg; i++) {
+      if (!node?.parentNode) return null;
+      node = node.parentNode;
+    }
+    return node;
   }
 
-  return ancestor;
-};
-
-export function querySelectAncestor <T extends Element>(this: Element, selector: string): T | null {
-  const element = document.querySelector<T>(selector);
-
-  if (element?.contains(this)) {
-    return element;
+  // Case 2: selector string
+  const selector = arg;
+  let el: Element | null = this instanceof Element ? this : this.parentElement;
+  while (el) {
+    if (el.matches(selector)) {
+      return el as T;
+    }
+    el = el.parentElement;
   }
-
   return null;
-};
-
+}
 export function createChildren (this: HTMLElement, elements: HTMLElementCascade): void {
   const element = document.createElement(elements.element);
 
