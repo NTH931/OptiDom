@@ -139,4 +139,10 @@ export async function parseFile<R = any, T = R>(
   return receiver(fileContent);
 };
 
+const origionallog = console.log;
+export function log(colorize?: true, ...data: any[]) {
+  const text = data.map(val => typeof val === "string" ? val : JSON.stringify(val)).join(" ");
+  origionallog(Colorize`${text}`);
+}
+
 }

@@ -202,3 +202,98 @@ describe("HTMLElement.toggle", () => {
     expect(element.style.visibility).toBe('visible');
   });
 });
+
+describe("HTMLFormElement.serialize", () => {
+  /** @type {HTMLFormElement} */
+  let el;
+
+  beforeEach(() => {
+    el = document.createElement("form");
+    document.body.append(el); // just in case serialization needs to be in DOM
+  });
+
+  afterEach(() => {
+    el.remove(); // clean that up like a pro
+  });
+
+  it("should return empty string for empty form", () => {
+    expect(el.serialize()).toBe("");
+  });
+
+  it("should serialize single input", () => {
+    const input = document.createElement("input");
+    input.name = "username";
+    input.value = "broski";
+    el.append(input);
+    expect(el.serialize()).toBe("username=broski");
+  });
+
+  it("should serialize multiple inputs", () => {
+    const el = document.createElement("form");
+    
+    const user = document.createElement("input");
+    user.name = "user";
+    user.value = "broski";
+
+    const age = document.createElement("input");
+    age.name = "age";
+    age.value = "15";
+
+    el.append(user, age);
+    expect(el.serialize()).toBe("user=broski&age=15");
+  });
+
+  it("should skip inputs without name", () => {
+    const skip = document.createElement("input");
+    skip.value = "npc";
+
+    const keep = document.createElement("input");
+    keep.name = "real";
+    keep.value = "W";
+
+    el.append(skip, keep);
+    expect(el.serialize()).toBe("real=W");
+  });
+
+  it("should only serialize checked checkboxes", () => {
+    const cb1 = document.createElement("input");
+    cb1.type = "checkbox";
+    cb1.name = "sub";
+    cb1.value = "yes";
+    cb1.checked = true;
+
+    const cb2 = document.createElement("input");
+    cb2.type = "checkbox";
+    cb2.name = "sub";
+    cb2.value = "no";
+    cb2.checked = false;
+
+    el.append(cb1, cb2);
+    expect(el.serialize()).toBe("sub=yes");
+  });
+
+  it("should only include selected radio", () => {
+    const r1 = document.createElement("input");
+    r1.type = "radio";
+    r1.name = "plan";
+    r1.value = "basic";
+
+    const r2 = document.createElement("input");
+    r2.type = "radio";
+    r2.name = "plan";
+    r2.value = "premium";
+    r2.checked = true;
+
+    el.append(r1, r2);
+    expect(el.serialize()).toBe("plan=premium");
+  });
+
+  it("should URL-encode keys and values", () => {
+    const input = document.createElement("input");
+    input.name = "user name";
+    input.value = "bro ski";
+
+    el.append(input);
+    expect(el.serialize()).toBe("user%20name=bro%20ski");
+  });
+});

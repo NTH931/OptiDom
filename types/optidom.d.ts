@@ -240,16 +240,24 @@ interface OptiDOMFeature {
 /**
  * @optidom
  */
-type ElementNode = {
-  /** The tag name of the element */
-  tag: HTMLTag;
+type ElementProps<T extends HTMLTag> = Partial<
+  Pick<
+    HTMLElementTagNameMap[T],
+    keyof HTMLElementTagNameMap[T] extends string ? keyof HTMLElementTagNameMap[T] : never
+  >
+>;
+
+/**
+ * @optidom
+ */
+type ElementNode<T extends HTMLTag = HTMLTag> = {
+  tag: T;
   class?: string;
   text?: string;
   html?: string;
-  style?: Record<string, string>,
-  children?: ElementNode[] | ElementNode,
-  [key: string]: string | Record<string, string> | ElementNode[] | ElementNode | undefined;
-};
+  style?: Record<string, string>;
+  children?: ElementNode[] | ElementNode;
+} & ElementProps<T>;
 
 /**
  * @optidom

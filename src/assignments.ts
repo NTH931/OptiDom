@@ -100,7 +100,7 @@ HTMLElement.prototype.tag = OptiDOM.tag;
 HTMLElement.prototype.html = OptiDOM.html;
 HTMLElement.prototype.show = OptiDOM.show;
 HTMLElement.prototype.hide = OptiDOM.hide;
-/*! Not Working */ HTMLElement.prototype.toggle = OptiDOM.toggle;
+HTMLElement.prototype.toggle = OptiDOM.toggle;
 // /*! Unchecked */ HTMLElement.prototype.fadeIn;
 // /*! Unchecked */ HTMLElement.prototype.fadeOut;
 // /*! Unchecked */ HTMLElement.prototype.fadeToggle;
@@ -109,7 +109,7 @@ HTMLElement.prototype.hide = OptiDOM.hide;
 // /*! Unchecked */ HTMLElement.prototype.slideToggle;
 // /*! Unchecked */ HTMLElement.prototype.animate;
 
-/*! Unchecked */ HTMLFormElement.prototype.serialize = OptiDOM.serialize;
+HTMLFormElement.prototype.serialize = OptiDOM.serialize;
 
 Node.prototype.getParent = OptiDOM.getParent;
 Node.prototype.getAncestor = OptiDOM.getAncestor;
