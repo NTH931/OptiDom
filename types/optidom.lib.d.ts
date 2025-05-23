@@ -148,7 +148,7 @@ interface Document {
    *   ]
    * });
    */
-  createElementTree(node: ElementNode): HTMLElementOf<typeof node.tag>;
+  createElementTree<T extends HTMLElement>(node: ElementNode): T;
 }
 
 interface Window {

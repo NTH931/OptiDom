@@ -109,7 +109,7 @@ export function documentCss (
   }
 }
 
-export function createElementTree(node: ElementNode): HTMLElementOf<typeof node.tag> {
+export function createElementTree<T extends HTMLElement>(node: ElementNode): T {
   const el = document.createElement(node.tag);
 
   // Add class if provided
@@ -155,7 +155,7 @@ export function createElementTree(node: ElementNode): HTMLElementOf<typeof node.
     }
   }
 
-  return el;
+  return el as T;
 }
 
 export function $ (selector: string) {

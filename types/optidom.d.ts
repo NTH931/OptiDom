@@ -242,8 +242,8 @@ interface OptiDOMFeature {
  */
 type ElementProps<T extends HTMLTag> = Partial<
   Pick<
-    HTMLElementTagNameMap[T],
-    keyof HTMLElementTagNameMap[T] extends string ? keyof HTMLElementTagNameMap[T] : never
+    HTMLElementOf<T>,
+    keyof HTMLElementOf<T> extends string ? keyof HTMLElementOf<T> : never
   >
 >;
 
