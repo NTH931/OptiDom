@@ -255,9 +255,10 @@ type ElementNode<T extends HTMLTag = HTMLTag> = {
   class?: string;
   text?: string;
   html?: string;
-  style?: Record<string, string>;
+  style?: Record<string, string | number>;
   children?: ElementNode[] | ElementNode;
-} & ElementProps<T>;
+  [key: string]: string
+};
 
 /**
  * @optidom

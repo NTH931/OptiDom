@@ -124,7 +124,7 @@ export function createElementTree<T extends HTMLElement>(node: ElementNode): T {
   // Handle styles, ensure it’s an object
   if (node.style && typeof node.style === 'object') {
     for (const [prop, val] of Object.entries(node.style)) {
-      el.style.setProperty(prop, val);
+      el.style.setProperty(prop, val.toString());
     }
   }
 

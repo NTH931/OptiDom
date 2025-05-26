@@ -1443,7 +1443,7 @@ var OptiDOM;
         // Handle styles, ensure it’s an object
         if (node.style && typeof node.style === 'object') {
             for (const [prop, val] of Object.entries(node.style)) {
-                el.style.setProperty(prop, val);
+                el.style.setProperty(prop, val.toString());
             }
         }
         // Handle other attributes (excluding known keys)
