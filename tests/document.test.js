@@ -61,20 +61,33 @@ describe("Document.bindShortcut", () => {
 
 describe("Document.createElementTree", () => {
   it("should create an element cascade and append to the body", () => {
-  const el = document.createElementTree({ 
-    tag: "div", 
-    children: { tag: "a" }
+    const el = document.createElementTree({ 
+      tag: "div", 
+      children: { tag: "a" }
+    });
+
+    document.body.appendChild(el);
+
+    const divs = document.body.getElementsByTagName("div");
+    expect(divs).toHaveLength(1);
+
+    const anchors = divs[0].getElementsByTagName("a");
+    expect(anchors).toHaveLength(1);
+
+    // Optional: check if the created div is actually a child of body
+    expect(document.body.contains(el)).toBeTruthy();
   });
-
-  document.body.appendChild(el);
-
-  const divs = document.body.getElementsByTagName("div");
-  expect(divs).toHaveLength(1);
-
-  const anchors = divs[0].getElementsByTagName("a");
-  expect(anchors).toHaveLength(1);
-
-  // Optional: check if the created div is actually a child of body
-  expect(document.body.contains(el)).toBeTruthy();
-});
+  
+  it("should be able to add keyed properties", () => {
+    expect(() => {
+      const el = document.createElementTree({ 
+        tag: "div", 
+        "data-href": "32",
+        children: { 
+          tag: "a",
+          "data-style": "position: absoulte;"
+        }
+      });
+    }).not.toThrow();
+  });
 });
