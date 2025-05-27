@@ -140,7 +140,7 @@ export function createElementTree<T extends HTMLElement>(node: ElementNode): T {
     ) {
       if (typeof val === 'string') {
         el.setAttribute(key, val);
-      }
+      } else throw new OptiDOM.CustomError("ParameterError", "Custom parameters must be of type 'string'");
     }
   }
 

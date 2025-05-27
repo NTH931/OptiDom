@@ -257,7 +257,7 @@ type ElementNode<T extends HTMLTag = HTMLTag> = {
   html?: string;
   style?: Record<string, string | number>;
   children?: ElementNode[] | ElementNode;
-  [key: string]: string
+  [key: string]: string | Record<string, string | number>
 };
 
 /**

@@ -1457,6 +1457,8 @@ var OptiDOM;
                 if (typeof val === 'string') {
                     el.setAttribute(key, val);
                 }
+                else
+                    throw new OptiDOM.CustomError("ParameterError", "Custom parameters must be of type 'string'");
             }
         }
         // Handle children (ensure it's an array or a single child)

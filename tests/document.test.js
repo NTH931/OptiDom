@@ -90,4 +90,19 @@ describe("Document.createElementTree", () => {
       });
     }).not.toThrow();
   });
+
+  it("should not be able to add keyed properties if they aren't a string", () => {
+    expect(() => {
+      const el = document.createElementTree({ 
+        tag: "div", 
+        "data-href": "32",
+        children: { 
+          tag: "a",
+          "data-style": { 
+            position: "absoulte"
+          }
+        }
+      });
+    }).toThrow();
+  });
 });
