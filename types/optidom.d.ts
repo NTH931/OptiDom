@@ -252,14 +252,20 @@ type ElementProps<T extends HTMLTag> = Partial<
 /**
  * @optidom
  */
-type ElementNode<T extends HTMLTag = HTMLTag> = {
-  tag: T;
+type ElementNode = {
+  tag: HTMLTag;
   class?: string;
   text?: string;
   html?: string;
   style?: Record<string, string | number>;
-  children?: ElementNode[] | ElementNode;
-  [key: string]: string | Record<string, string | number>
+  children?: ElementNode | ElementNode[];
+  [key: string]: 
+    | string 
+    | number
+    | Style
+    | ElementNode
+    | ElementNode[]
+    | undefined;
 };
 
 /**
