@@ -571,4 +571,75 @@ export class ShortcutEvent extends KeyboardEvent {
   }
 }
 
+export class FNRegistry<R = {}> {
+  private _map = {} as R;
+
+  set<K extends string, F extends (this: any, ...args: any[]) => any>(
+    key: K,
+    fn: F
+  ): asserts this is FNRegistry<R & { [P in K]: F }> {
+    (this._map as any)[key] = fn;
+  }
+
+  get<K extends keyof R>(key: K): R[K] {
+    return this._map[key];
+  }
+}
+
+export class TypedMap<R extends Record<string | number, any> = {}> {
+  private _map = {} as R;
+  
+  get size(): number {
+    return Object.keys(this._map).length;
+  }
+
+  set<K extends string, F extends any>(
+    key: K,
+    value: F
+  ): asserts this is TypedMap<R & { [P in K]: F }> {
+    (this._map as any)[key] = value;
+  }
+
+  get<K extends keyof R>(key: K): R[K] {
+    return this._map[key];
+  }
+
+  notNull<K extends keyof R>(key: K): boolean {
+    return this._map[key] !== null || this._map[key] !== undefined;
+  }
+
+  delete<K extends keyof R>(key: K): asserts this is TypedMap<Omit<R, K>> {
+    delete this._map[key];
+  }
+
+  keys(): (keyof R)[] {
+    return Object.keys(this._map) as (keyof R)[];
+  }
+
+  entries(): [keyof R, R[keyof R]][] {
+    return Object.entries(this._map) as [keyof R, R[keyof R]][];
+  }
+
+  clear(): void {
+    for (const key in this._map) delete this._map[key];
+  }
+
+  *[Symbol.iterator](): IterableIterator<[keyof R, R[keyof R]]> {
+    for (const key in this._map) {
+      yield [key as keyof R, this._map[key]];
+    }
+  }
+
+  get [Symbol.toStringTag](): string {
+    return "[object TypedMap]";
+  }
+
+  forEach(callback: <K extends keyof R>(value: R[K], key: K) => void): void {
+    for (const key in this._map) {
+      const val = this._map[key];
+      callback(val, key as keyof R);
+    }
+  }
+}
+
 }

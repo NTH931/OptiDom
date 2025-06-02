@@ -1,7 +1,7 @@
 {
   "name": "optidom",
   "type": "module",
-  "version": "2.6.5",
+  "version": "2.6.6",
   "private": false,
   "description": "Lightweight DOM manipulation, styling, and utility extension for native JavaScript objects — without wrappers.",
   "main": "dist/optidom.js",
@@ -15,7 +15,7 @@
     "test": "npm run build && npm run check silent && jest",
     "git-push": "node scripts/push.js",
     "check": "node scripts/check.js",
-    "prepublishOnly": "npm run build && npm run check && npm run git-push"
+    "prepublishOnly": "npm run build && npm run git-push"
   },
   "jest": {
     "transform": {

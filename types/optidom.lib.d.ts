@@ -966,9 +966,10 @@ declare var AccessError: ErrorType<typeof OptiDOM.AccessError>;
 declare var ColorizedSyntaxError: ErrorType<typeof OptiDOM.ColorizedSyntaxError>;
 declare var CustomError: ErrorType<typeof OptiDOM.CustomError>;
 
-declare var Cookie: typeof Cookie;
-declare var LocalStorage: typeof LocalStorage;
-declare var SessionStorage: typeof SessionStorage;
-declare var Time: typeof Time;
-declare var Sequence: typeof Sequence;
-declare var ShortcutEvent: typeof ShortcutEvent;
+declare var Optidom: typeof OptidomT;
+declare var Cookie: typeof OptiDOM.Cookie;
+declare var LocalStorage: typeof OptiDOM.LocalStorage;
+declare var SessionStorage: typeof OptiDOM.SessionStorage;
+declare var Time: typeof OptiDOM.Time;
+declare var Sequence: typeof OptiDOM.Sequence;
+declare var ShortcutEvent: typeof OptiDOM.ShortcutEvent;

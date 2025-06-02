@@ -13,6 +13,8 @@ type KeyboardEventKey = ModifierKey | RegularKey;
 //! Utility Types
 type StringRecord<T> = Record<string, T>;
 
+type Class<T> = abstract new (...args: any[]) => T;
+
 type ShortcutEventInit = Omit<KeyboardEventInit, "altKey" | "ctrlKey" | "shiftKey" | "metaKey" | "key">
 
 const ANSI_CODES = {

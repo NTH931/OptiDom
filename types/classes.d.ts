@@ -125,3 +125,61 @@ declare class ShortcutEvent extends KeyboardEvent {
     eventInit?: ShortcutEventInit
   )
 }
+
+export declare class TypedMap<R extends Record<string | number, any> = {}> {
+  private _map: R;
+
+  readonly size: number;
+
+  set<K extends string, F>(
+    key: K,
+    value: F
+  ): asserts this is TypedMap<R & { [P in K]: F }>;
+
+  get<K extends keyof R>(key: K): R[K];
+
+  notNull<K extends keyof R>(key: K): boolean;
+
+  delete<K extends keyof R>(key: K): asserts this is TypedMap<Omit<R, K>>;
+
+  keys(): (keyof R)[];
+
+  entries(): [keyof R, R[keyof R]][];
+
+  clear(): void;
+
+  [Symbol.iterator](): IterableIterator<[keyof R, R[keyof R]]>;
+
+  readonly [Symbol.toStringTag]: string;
+
+  forEach(callback: <K extends keyof R>(value: R[K], key: K) => void): void;
+}
+
+declare class optidom {
+  register<T>(
+    clazz: (new(...args:any[])=>T) | (Function & { prototype: any }), 
+    methodName: keyof T, 
+    method: (this: T, ...args: any[]) => any, 
+    overwrite?: boolean
+  );
+  register<T>(
+    clazz: (new(...args:any[])=>T) | (Function & { prototype: any }), 
+    methodName: string | symbol, 
+    method: (this: T, ...args: any[]) => any, 
+    overwrite?: boolean
+  );
+  register<T>(
+  clazz: typeof globalThis,
+  methodName: string | symbol,
+  methodOrClass: (this: typeof globalThis, ...args: any[]) => any,
+  overwrite?: boolean
+  ): void;
+
+  register<T>(
+    clazz: typeof globalThis,
+    methodName: string | symbol,
+    methodOrClass: new (...args: any[]) => T,
+    overwrite?: boolean
+  ): void;
+  debug(): void;
+}

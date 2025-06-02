@@ -1,7 +1,7 @@
 namespace OptiDOM {
 
-export function addEventListenerEnum <T extends EventTarget>(
-  this: Iterable<T>,
+export function addEventListenerEnum <IterableClass extends Iterable<T>, T extends EventTarget>(
+  this: IterableClass,
   type: keyof EventMapOf<T>,
   listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any,
   options?: boolean | AddEventListenerOptions
