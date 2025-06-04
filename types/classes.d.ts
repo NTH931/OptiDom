@@ -156,30 +156,20 @@ export declare class TypedMap<R extends Record<string | number, any> = {}> {
 }
 
 declare class optidom {
-  register<T>(
-    clazz: (new(...args:any[])=>T) | (Function & { prototype: any }), 
-    methodName: keyof T, 
-    method: (this: T, ...args: any[]) => any, 
+  register<T, K extends PropertyKey>(
+    clazz: new (...args: any[]) => T,
+    methodName: K,
+    method: new (...args: any[]) => T,
+    prototype?: false,
     overwrite?: boolean
-  );
-  register<T>(
-    clazz: (new(...args:any[])=>T) | (Function & { prototype: any }), 
-    methodName: string | symbol, 
-    method: (this: T, ...args: any[]) => any, 
-    overwrite?: boolean
-  );
-  register<T>(
-  clazz: typeof globalThis,
-  methodName: string | symbol,
-  methodOrClass: (this: typeof globalThis, ...args: any[]) => any,
-  overwrite?: boolean
   ): void;
 
-  register<T>(
-    clazz: typeof globalThis,
-    methodName: string | symbol,
-    methodOrClass: new (...args: any[]) => T,
+  register<T, K extends PropertyKey>(
+    clazz: (object & Partial<{ prototype: any }>) | (new (...args: any[]) => T),
+    methodName: K,
+    method: (this: T, ...args: any[]) => any,
+    prototype?: boolean,
     overwrite?: boolean
-  ): void;
+  ): optidom<M & { [P in K]: (this: T, ...args: any[]) => any }>;
   debug(): void;
 }

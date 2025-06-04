@@ -168,6 +168,19 @@ export function isEmpty(val: any): boolean {
   return false;
 }
 
+export function assert<T>(val: any): asserts val is T;
+export function assert<T, U extends T>(val: any, guard: (v: any) => v is U): asserts val is U;
+export function assert<T, U extends T>(
+  val: any,
+  guard?: (v: any) => v is U
+): asserts val is U {
+  if (guard) {
+    if (!guard(val)) throw new Error("assertion failed: not U");
+  } else {
+    if (val === null || val === undefined) throw new Error("assertion failed: val is null/undefined");
+  }
+}
+
 export function createEventListener<T extends ((...args: any[]) => any)[]>(
   triggers: T,
   callback: (...results: CallbackResult<T>) => void

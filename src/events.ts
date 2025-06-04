@@ -65,27 +65,30 @@ export function delegateEventListener<
 >(
   this: T,
   type: K,
-  delegator: HTMLElement | HTMLTag | string,
+  delegator: HTMLTag | string,
   listener: (this: U, e: EventMapOf<T>[K]) => void,
   options?: boolean | AddEventListenerOptions
 ) {
   this.addEventListener(
     type as string,
     function (this: T, e: Event) {
-      const target = e.target as HTMLElement;
+      const target = e.target as HTMLElement | null;
+
+      if (!target) return;
 
       let selector: string;
       if (typeof delegator === "string") {
         selector = delegator;
-      } else if ("tagName" in delegator && typeof delegator.tagName === "string") {
-        selector = delegator.tagName.toLowerCase(); // or a class/id if appropriate
       } else {
-        selector = delegator.tagName?.toLowerCase?.() ?? "";
+        selector = ""; // fallback
       }
 
       const matchedEl = target.closest(selector) as U | null;
 
-      if (matchedEl && this instanceof Element && this.contains(matchedEl)) {
+      if (
+        matchedEl && 
+        (!(this instanceof Element) || this.contains(matchedEl))
+      ) {
         listener.call(matchedEl, e as EventMapOf<T>[K]);
       }
     },

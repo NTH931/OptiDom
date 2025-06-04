@@ -887,6 +887,17 @@ var OptiDOM;
         return false;
     }
     OptiDOM.isEmpty = isEmpty;
+    function assert(val, guard) {
+        if (guard) {
+            if (!guard(val))
+                throw new Error("assertion failed: not U");
+        }
+        else {
+            if (val === null || val === undefined)
+                throw new Error("assertion failed: val is null/undefined");
+        }
+    }
+    OptiDOM.assert = assert;
     function createEventListener(triggers, callback) {
         const originals = triggers.map(fn => fn);
         triggers.forEach((originalFn, i) => {
@@ -1370,20 +1381,19 @@ var OptiDOM;
     ;
     function delegateEventListener(type, delegator, listener, options) {
         this.addEventListener(type, function (e) {
-            var _a, _b, _c;
             const target = e.target;
+            if (!target)
+                return;
             let selector;
             if (typeof delegator === "string") {
                 selector = delegator;
             }
-            else if ("tagName" in delegator && typeof delegator.tagName === "string") {
-                selector = delegator.tagName.toLowerCase(); // or a class/id if appropriate
-            }
             else {
-                selector = (_c = (_b = (_a = delegator.tagName) === null || _a === void 0 ? void 0 : _a.toLowerCase) === null || _b === void 0 ? void 0 : _b.call(_a)) !== null && _c !== void 0 ? _c : "";
+                selector = ""; // fallback
             }
             const matchedEl = target.closest(selector);
-            if (matchedEl && this instanceof Element && this.contains(matchedEl)) {
+            if (matchedEl &&
+                (!(this instanceof Element) || this.contains(matchedEl))) {
                 listener.call(matchedEl, e);
             }
         }, options);
@@ -1574,146 +1584,150 @@ var OptiDOM;
 (function (OptiDOM) {
     class optidom {
         constructor() {
-            this._registry = new Map();
-            this._registryFuncs = {};
+            this._registry = {};
         }
-        register(clazz, methodName, method, overwrite) {
-            if (isGlobal(clazz)) {
-                clazz[methodName] = method;
+        register(clazz, methodName, method, prototype = true, options = {}) {
+            const isGlobalTarget = isGlobal(clazz);
+            const className = clazz.name || "global";
+            const key = `${className}.${String(methodName)}`;
+            const isAccessor = typeof method === "object" &&
+                (typeof method.get === "function" || typeof method.set === "function");
+            const descriptor = isAccessor
+                ? Object.assign(Object.assign({ configurable: true, enumerable: false }, method), options) : Object.assign({ value: method, writable: true, configurable: true, enumerable: false }, options);
+            const target = prototype && !isGlobalTarget ? clazz.prototype : clazz;
+            if (!target)
+                throw new Error("The class specified has no prototype");
+            if (!options.overwrite && methodName in target) {
+                console.warn(`[optidom] skipped ${className}${prototype ? ".prototype" : ""}.${String(methodName)} (already exists)`);
+                return this;
             }
-            else {
-                if (!clazz.prototype)
-                    throw new Error("The class specified has no prototype");
-                const name = clazz.name;
-                if (!overwrite && methodName in clazz.prototype) {
-                    console.warn(`[optidom] skipped ${name}.${methodName.toString()} (already exists)`);
-                    return;
-                }
-                Object.defineProperty(clazz.prototype, methodName, {
-                    value: method,
-                    writable: true,
-                    configurable: true,
-                    enumerable: false
-                });
-                if (!this._registry.has(name))
-                    this._registry.set(name, []);
-                this._registryFuncs[methodName] = method;
-                this._registry.get(name).push(methodName.toString());
-            }
+            Object.defineProperty(target, methodName, descriptor);
+            this._registry[methodName] = method;
+            return new optidom();
+        }
+        explicitRegister(key, value) {
+            this._registry[key] = value;
+            return new optidom();
         }
         get(key) {
-            return this._registryFuncs[key];
+            return this._registry[key];
+        }
+        getAll() {
+            return this._registry;
         }
         debug() {
             console.group("[OptiDOM] registered methods:");
-            for (const [className, methods] of this._registry.entries()) {
-                console.log(`${className}: ${methods.join(", ")}`);
+            for (const key in this._registry) {
+                console.log(`- ${key}`);
             }
             console.groupEnd();
         }
+        es(version) {
+            switch (version) {
+            }
+        }
+        flags(...flag) {
+        }
+        globalQs() {
+        }
+        strict() {
+        }
     }
     OptiDOM.optidom = optidom;
-    ;
 })(OptiDOM || (OptiDOM = {}));
-const OptidomT = new OptiDOM.optidom();
-OptidomT.register(globalThis, "f", (iife) => iife());
-globalThis.createEventListener = OptiDOM.createEventListener;
-globalThis.LocalStorage = OptiDOM.LocalStorage;
-globalThis.SessionStorage = OptiDOM.SessionStorage;
-globalThis.Cookie = OptiDOM.Cookie;
-globalThis.Time = OptiDOM.Time;
-globalThis.Sequence = OptiDOM.Sequence;
-globalThis.ShortcutEvent = OptiDOM.ShortcutEvent;
-globalThis.emitter = OptiDOM.emitter;
-globalThis.features = OptiDOM.features;
-globalThis.isEmpty = OptiDOM.isEmpty;
-globalThis.type = OptiDOM.type;
-globalThis.generateID = OptiDOM.generateID;
-globalThis.Colorize = OptiDOM.Colorize;
-globalThis.UnknownError = OptiDOM.UnknownError;
-globalThis.NotImplementedError = OptiDOM.NotImplementedError;
-globalThis.AccessError = OptiDOM.AccessError;
-globalThis.CustomError = OptiDOM.CustomError;
-globalThis.ColorizedSyntaxError = OptiDOM.ColorizedSyntaxError;
-OptidomT.register(Document, "ready", OptiDOM.ready);
-/*! Not Working */ Document.prototype.leaving = OptiDOM.leaving;
-/*! Deprecated */ Document.prototype.elementCreator = OptiDOM.elementCreatorDocument;
-OptidomT.register(Document, "bindShortcut", OptiDOM.bindShortcut);
-OptidomT.register(Document, "css", OptiDOM.documentCss);
-OptidomT.register(Document, "createElementTree", OptiDOM.createElementTree);
-OptidomT.register(Document, "$", OptiDOM.$);
-OptidomT.register(Document, "$$", OptiDOM.$$);
-OptidomT.register(Date, "at", OptiDOM.atDate);
-OptidomT.register(Date, "fromTime", OptiDOM.fromTime);
-OptidomT.register(NodeList, "addEventListener", OptiDOM.addEventListenerEnum);
-OptidomT.register(NodeList, "addClass", OptiDOM.addClassList);
-OptidomT.register(NodeList, "removeClass", OptiDOM.removeClassList);
-OptidomT.register(NodeList, "toggleClass", OptiDOM.toggleClassList);
-OptidomT.register(NodeList, "single", function () {
-    // If the NodeList has elements, return the first one, otherwise return null
+const OptidomT = new OptiDOM.optidom()
+    .register(globalThis, "f", (iife) => iife())
+    .register(globalThis, "createEventListener", OptiDOM.createEventListener, false)
+    .register(globalThis, "LocalStorage", OptiDOM.LocalStorage, false)
+    .register(globalThis, "SessionStorage", OptiDOM.SessionStorage, false)
+    .register(globalThis, "Cookie", OptiDOM.Cookie, false)
+    .register(globalThis, "Time", OptiDOM.Time, false)
+    .register(globalThis, "Sequence", OptiDOM.Sequence, false)
+    .register(globalThis, "ShortcutEvent", OptiDOM.ShortcutEvent, false)
+    .register(globalThis, "emitter", OptiDOM.emitter, false)
+    .register(globalThis, "features", OptiDOM.features, false)
+    .register(globalThis, "isEmpty", OptiDOM.isEmpty, false)
+    .register(globalThis, "type", OptiDOM.type, false)
+    .register(globalThis, "generateID", OptiDOM.generateID, false)
+    .register(globalThis, "Colorize", OptiDOM.Colorize, false)
+    .register(globalThis, "UnknownError", OptiDOM.UnknownError, false)
+    .register(globalThis, "NotImplementedError", OptiDOM.NotImplementedError, false)
+    .register(globalThis, "AccessError", OptiDOM.AccessError, false)
+    .register(globalThis, "CustomError", OptiDOM.CustomError, false)
+    .register(globalThis, "ColorizedSyntaxError", OptiDOM.ColorizedSyntaxError, false)
+    .register(Document, "ready", OptiDOM.ready)
+    /*! Not Working */ .register(Document, "leaving", OptiDOM.leaving)
+    /*! Deprecated */ .register(Document, "elementCreator", OptiDOM.elementCreatorDocument)
+    .register(Document, "bindShortcut", OptiDOM.bindShortcut)
+    .register(Document, "css", OptiDOM.documentCss)
+    .register(Document, "createElementTree", OptiDOM.createElementTree)
+    .register(Document, "$", OptiDOM.$)
+    .register(Document, "$$", OptiDOM.$$)
+    .register(Date, "at", OptiDOM.atDate)
+    .register(Date, "fromTime", OptiDOM.fromTime)
+    .register(NodeList, "addEventListener", OptiDOM.addEventListenerEnum)
+    .register(NodeList, "addClass", OptiDOM.addClassList)
+    .register(NodeList, "removeClass", OptiDOM.removeClassList)
+    .register(NodeList, "toggleClass", OptiDOM.toggleClassList)
+    .register(NodeList, "single", function () {
     return this.length > 0 ? this[0] : null;
-});
-OptidomT.register(HTMLCollection, "addEventListener", OptiDOM.addEventListenerEnum);
-OptidomT.register(HTMLCollection, "addClass", OptiDOM.addClassList);
-OptidomT.register(HTMLCollection, "removeClass", OptiDOM.removeClassList);
-OptidomT.register(HTMLCollection, "toggleClass", OptiDOM.toggleClassList);
-OptidomT.register(HTMLCollection, "single", function () {
-    // If the collection has elements, return the first one, otherwise return null
+})
+    .register(HTMLCollection, "addEventListener", OptiDOM.addEventListenerEnum)
+    .register(HTMLCollection, "addClass", OptiDOM.addClassList)
+    .register(HTMLCollection, "removeClass", OptiDOM.removeClassList)
+    .register(HTMLCollection, "toggleClass", OptiDOM.toggleClassList)
+    .register(HTMLCollection, "single", function () {
     return this.length > 0 ? this[0] : null;
-});
-OptidomT.register(EventTarget, "addBoundListener", OptiDOM.addBoundListener);
-OptidomT.register(EventTarget, "addEventListeners", OptiDOM.addEventListeners);
-OptidomT.register(EventTarget, "delegateEventListener", OptiDOM.delegateEventListener);
-OptidomT.register(Element, "hasText", OptiDOM.hasText);
-OptidomT.register(Element, "txt", OptiDOM.text);
-OptidomT.register(Element, "addClass", OptiDOM.addClass);
-OptidomT.register(Element, "removeClass", OptiDOM.removeClass);
-OptidomT.register(Element, "toggleClass", OptiDOM.toggleClass);
-OptidomT.register(Element, "hasClass", OptiDOM.hasClass);
-OptidomT.register(HTMLElement, "css", OptiDOM.css);
-OptidomT.register(HTMLElement, "elementCreator", OptiDOM.elementCreator);
-OptidomT.register(HTMLElement, "tag", OptiDOM.tag);
-OptidomT.register(HTMLElement, "html", OptiDOM.html);
-OptidomT.register(HTMLElement, "show", OptiDOM.show);
-OptidomT.register(HTMLElement, "hide", OptiDOM.hide);
-OptidomT.register(HTMLElement, "toggle", OptiDOM.toggle);
-// /*! Unchecked */ HTMLElement.prototype.fadeIn;
-// /*! Unchecked */ HTMLElement.prototype.fadeOut;
-// /*! Unchecked */ HTMLElement.prototype.fadeToggle;
-// /*! Unchecked */ HTMLElement.prototype.slideIn;
-// /*! Unchecked */ HTMLElement.prototype.slideOut;
-// /*! Unchecked */ HTMLElement.prototype.slideToggle;
-// /*! Unchecked */ HTMLElement.prototype.animate;
-OptidomT.register(HTMLFormElement, "serialize", OptiDOM.serialize);
-OptidomT.register(Node, "getParent", OptiDOM.getParent);
-OptidomT.register(Node, "getAncestor", OptiDOM.getAncestor);
-OptidomT.register(Node, "getChildren", OptiDOM.getChildren);
-OptidomT.register(Node, "getSiblings", OptiDOM.getSiblings);
-OptidomT.register(Node, "$", OptiDOM.find);
-OptidomT.register(Node, "$$", OptiDOM.findAll);
-Math.random = OptiDOM.random;
-Object.clone = OptiDOM.clone;
-Object.forEach = OptiDOM.forEach;
-Date.fromTime = OptiDOM.fromTime;
-Date.at = OptiDOM.atDate;
-OptidomT.register(Number, "repeat", OptiDOM.repeat);
-/* Untestable */ JSON.parseFile = OptiDOM.parseFile;
-OptidomT.register(Array, "unique", OptiDOM.unique);
-OptidomT.register(Array, "chunk", OptiDOM.chunk);
-OptidomT.register(String, "remove", OptiDOM.remove);
-OptidomT.register(String, "removeAll", OptiDOM.removeAll);
-OptidomT.register(String, "capitalize", OptiDOM.capitalize);
-defineGetter(Window.prototype, "width", () => window.innerWidth || document.body.clientWidth);
-defineGetter(Window.prototype, "height", () => window.innerHeight || document.body.clientHeight);
-defineGetter(HTMLElement.prototype, "visible", function () {
-    return this.css("visibility") !== "hidden"
-        ? this.css("display") !== "none"
-        : Number(this.css("opacity")) > 0;
-});
-defineGetter(Object.prototype, "__type", function () {
-    // Placeholder
-    return this.constructor.name;
-});
+})
+    .register(EventTarget, "addBoundListener", OptiDOM.addBoundListener)
+    .register(EventTarget, "addEventListeners", OptiDOM.addEventListeners)
+    .register(EventTarget, "delegateEventListener", OptiDOM.delegateEventListener)
+    .register(Element, "hasText", OptiDOM.hasText)
+    .register(Element, "txt", OptiDOM.text)
+    .register(Element, "addClass", OptiDOM.addClass)
+    .register(Element, "removeClass", OptiDOM.removeClass)
+    .register(Element, "toggleClass", OptiDOM.toggleClass)
+    .register(Element, "hasClass", OptiDOM.hasClass)
+    .register(HTMLElement, "css", OptiDOM.css)
+    .register(HTMLElement, "elementCreator", OptiDOM.elementCreator)
+    .register(HTMLElement, "tag", OptiDOM.tag)
+    .register(HTMLElement, "html", OptiDOM.html)
+    .register(HTMLElement, "show", OptiDOM.show)
+    .register(HTMLElement, "hide", OptiDOM.hide)
+    .register(HTMLElement, "toggle", OptiDOM.toggle)
+    .register(HTMLFormElement, "serialize", OptiDOM.serialize)
+    .register(Node, "getParent", OptiDOM.getParent)
+    .register(Node, "getAncestor", OptiDOM.getAncestor)
+    .register(Node, "getChildren", OptiDOM.getChildren)
+    .register(Node, "getSiblings", OptiDOM.getSiblings)
+    .register(Node, "$", OptiDOM.find)
+    .register(Node, "$$", OptiDOM.findAll)
+    .register(Number, "repeat", OptiDOM.repeat)
+    .register(Array, "unique", OptiDOM.unique)
+    .register(Array, "chunk", OptiDOM.chunk)
+    .register(String, "remove", OptiDOM.remove)
+    .register(String, "removeAll", OptiDOM.removeAll)
+    .register(String, "capitalize", OptiDOM.capitalize)
+    .register(Math, "random", OptiDOM.random, false)
+    .register(JSON, "parseFile", OptiDOM.parseFile, false)
+    .register(Object, "clone", OptiDOM.clone, false)
+    .register(Object, "forEach", OptiDOM.forEach, false)
+    .register(Date, "at", OptiDOM.atDate, false)
+    .register(Date, "fromTime", OptiDOM.fromTime, false)
+    .register(Window, "width", {
+    get: () => window.innerWidth || document.body.clientWidth
+}, false)
+    .register(Window, "height", {
+    get: () => window.innerHeight || document.body.clientHeight
+}, false)
+    .register(HTMLElement, "visible", {
+    get: function () {
+        return this.css("visibility") !== "hidden"
+            ? this.css("display") !== "none"
+            : Number(this.css("opacity")) > 0;
+    }
+})
+    .explicitRegister("HTMLDefaultElement", OptiDOM.HTMLDefaultElement);
 customElements.define("default-option", OptiDOM.HTMLDefaultElement, { extends: "option" });
 globalThis.Optidom = OptidomT;
 /// <reference path="../types/optidom.lib.d.ts" />

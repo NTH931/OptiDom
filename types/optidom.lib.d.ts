@@ -315,7 +315,7 @@ interface EventTarget {
   delegateEventListener<T extends EventTarget, U extends Element, K extends keyof EventMapOf<T>>(
     this: T,
     type: K,
-    delegator: HTMLElement | HTMLTag | string,
+    delegator: HTMLTag | string,
     listener: (this: U, e: EventMapOf<T>[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void
