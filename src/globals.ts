@@ -210,29 +210,37 @@ export function createEventListener<T extends ((...args: any[]) => any)[]>(
   });
 }
 
-export const emitter: EventEmitter = new class {
-  private listeners: { [event: string]: Function[] } = {};
-  
-  on<T extends string, P extends any[]>(event: T, callback: (...args: P) => void) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    this.listeners[event].push(callback);
-  }
-  off<T extends string, P extends any[]>(event: T, callback: (...args: P) => void) {
-    const listeners = this.listeners[event];
-    if (listeners) {
-      this.listeners[event] = listeners.filter(fn => fn !== callback);
-    }
+type EventMap = Record<string, (...args: any[]) => void>;
+class EventEmitter<M extends EventMap> {
+  private listeners: Partial<{ [K in keyof M]: M[K][] }> = {};
+
+  on<T extends string, P extends (...args: any[]) => void>(
+    event: T,
+    callback: P
+  ): asserts this is EventEmitter<M & Record<T, P>> {
+    const key = event as keyof M;
+    (this.listeners[key] ||= []).push(callback as unknown as M[keyof M]);
   }
 
-  emit<T extends string, P extends any[]>(event: T, ...params: P) {
-    const listeners = this.listeners[event];
-    if (listeners) {
-      listeners.forEach((callback) => callback(...params));
+  off<T extends keyof M>(
+    event: T
+  ): asserts this is EventEmitter<Omit<M, T>>;
+  off<T extends string>(event: T): void;
+  off(event: string): void {
+    delete this.listeners[event as keyof M];
+  }
+
+  emit<T extends keyof M>(event: T, ...params: Parameters<M[T]>): void;
+  emit<T extends string>(event: T, ...params: any[]): void;
+  emit(event: string, ...params: any[]): void {
+    const callbacks = this.listeners[event as keyof M];
+    if (callbacks) {
+      (callbacks as ((...args: any[]) => void)[]).forEach(cb => cb(...params));
     }
   }
-};
+}
+
+export const emitter = new EventEmitter<{}>();
 
 export function generateID(): ID {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%&*_-";

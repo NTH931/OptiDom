@@ -36,9 +36,23 @@ function isGlobal(val: any): val is typeof globalThis {
   return val === globalThis;
 }
 
+function typedEntries<T extends object, K extends keyof T>(obj: T): [K, T[K]][] {
+  return Object.entries(obj) as [K, T[K]][];
+}
+
+
+
 namespace OptiDOM {
-export class optidom<M extends Record<string, any> = {}> {
+  class OptiDOMRemovedError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = "OptiDOMRemovedError";
+    }
+  }
+
+  export class optidom<M extends Record<string, any> = {}> {
     private _registry: M = {} as M;
+    private _setup: boolean = false;
 
     register<T, K extends PropertyKey>(
       clazz: object,
@@ -74,12 +88,12 @@ export class optidom<M extends Record<string, any> = {}> {
       const descriptor: PropertyDescriptor = isAccessor
         ? { configurable: true, enumerable: false, ...method, ...options }
         : {
-            value: method,
-            writable: true,
-            configurable: true,
-            enumerable: false,
-            ...options,
-          };
+          value: method,
+          writable: true,
+          configurable: true,
+          enumerable: false,
+          ...options,
+        };
 
       const target =
         prototype && !isGlobalTarget ? (clazz as any).prototype : clazz;
@@ -126,22 +140,107 @@ export class optidom<M extends Record<string, any> = {}> {
       console.groupEnd();
     }
 
-    es(version: placeholder): void {
-      switch(version) {
+    configure(config: OptiDOMConfig): Readonly<OptiDOMConfig> {
+      if (!this._setup) {
+        this._setup = true;
 
+        if (config.globalSelector) {
+          if (typeof globalThis.$ === "undefined") globalThis.$ = OptiDOM.$;
+          if (typeof globalThis.$$ === "undefined") globalThis.$$ = OptiDOM.$$;
+        } else {
+          if (globalThis.$ === OptiDOM.$) delete globalThis.$;
+          if (globalThis.$$ === OptiDOM.$$) delete globalThis.$$;
+        }
+
+        if (config.allowDOMWrite === false) {
+          document.write = () => {
+            throw new OptiDOMRemovedError("Function document.write was removed");
+          };
+
+          document.writeln = () => {
+            throw new OptiDOMRemovedError("Function document.write was removed");
+          };
+        }
+
+        if (config.disableDeprecated) {
+          switch (config.disableDeprecated) {
+            case "All":
+              break;
+            case "JSBase":
+              break;
+            case "OptiDOMReplaced":
+              break;
+          }
+        }
+
+        if (config.htmlOnly) {
+          const originalCreateElement = document.createElement.bind(document);
+          const originalQuerySelector = document.querySelector.bind(document);
+
+          // Override createElement to block SVG, MathML, XML elements
+          document.createElement = function(tagName: string, options?: ElementCreationOptions): HTMLElement {
+            const lowerTag = tagName.toLowerCase();
+
+            // Block SVG/MathML tags — adjust list as needed
+            const blockedTags = [
+              "svg", "circle", "rect", "path", "math", "maction", "mfrac", "msqrt" // etc
+            ];
+
+            if (blockedTags.includes(lowerTag)) {
+              throw new Error(`Creation of <${tagName}> is blocked by htmlOnly enforcement.`);
+            }
+
+            return originalCreateElement(tagName, options);
+          };
+
+          // Optionally override querySelector to check for SVG/MathML too
+          document.querySelector = function<E extends Element = Element>(selector: string): E | null {
+            // Simple example: disallow selectors that match SVG or MathML tags
+            if (/^(svg|circle|rect|path|math|maction|mfrac|msqrt)/i.test(selector.trim())) {
+              throw new Error(`Querying for SVG/MathML elements is blocked by htmlOnly enforcement.`);
+            }
+            return originalQuerySelector(selector);
+          };
+
+          const originalCreateElementNS = document.createElementNS.bind(document);
+          document.createElementNS = (function(namespaceURI: any, qualifiedName: any, options?: any) {
+            if (namespaceURI === "http://www.w3.org/2000/svg" || namespaceURI === "http://www.w3.org/1998/Math/MathML") {
+              throw new Error(`Creation of namespaced element ${qualifiedName} in ${namespaceURI} is blocked by htmlOnly enforcement.`);
+            }
+            return originalCreateElementNS(namespaceURI, qualifiedName, options);
+          }) as typeof document.createElementNS;
+        }
+
+        if (config.apiRules) {
+          if (typeof config.apiRules === "string") {
+
+          } else {
+            switch(config.apiRules) {
+              
+            }
+          }
+        }
+
+      } else console.error("[OptiDOM]: OptiDOM settings are already configured");
+
+      return config;
+    }
+
+    strict(): Readonly<OptiDOMConfig> | void {
+      if (!this._setup) {
+        this._setup = true;
+        return this.configure({
+          version: "ESNext",
+          apiRules: "Check",
+          allowDOMWrite: false,
+          disableDeprecated: "All",
+          htmlOnly: true,
+          useFetchCORS: true
+        });
+      } else {
+        console.error("[OptiDOM]: OptiDOM has already been configured.");
+        return;
       }
-    }
-
-    flags(...flag: placeholder[]): void {
-
-    }
-
-    globalQs(): placeholder {
-
-    }
-
-    strict(): void {
-      
     }
   }
 }
@@ -168,12 +267,9 @@ const OptidomT = new OptiDOM.optidom()
   .register(globalThis, "ColorizedSyntaxError", OptiDOM.ColorizedSyntaxError, false)
   .register(Document, "ready", OptiDOM.ready)
   /*! Not Working */.register(Document, "leaving", OptiDOM.leaving)
-  /*! Deprecated */.register(Document, "elementCreator", OptiDOM.elementCreatorDocument)
   .register(Document, "bindShortcut", OptiDOM.bindShortcut)
   .register(Document, "css", OptiDOM.documentCss)
   .register(Document, "createElementTree", OptiDOM.createElementTree)
-  .register(Document, "$", OptiDOM.$)
-  .register(Document, "$$", OptiDOM.$$)
 
   .register(Date, "at", OptiDOM.atDate)
   .register(Date, "fromTime", OptiDOM.fromTime)

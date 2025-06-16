@@ -24,7 +24,7 @@ interface Node {
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Document/querySelector)
    * @deprecated
-   * @migrate {@link Node.find}
+   * @migrate {@link Node.$}
    */
   querySelector<E extends Element = Element>(selectors: string): E | null;
 
@@ -33,14 +33,14 @@ interface Node {
    *
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Document/querySelectorAll)
    * @deprecated
-   * @migrate {@link Node.find}
+   * @migrate {@link Node.$$}
    */
   querySelectorAll<E extends Element = Element>(selectors: string): NodeListOf<E>;
 
   /** 
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Node/textContent) 
    * @deprecated
-   * @migrate {@link Element.text}
+   * @migrate {@link Element.txt}
    */
   textContent: string | null;
 }
@@ -112,14 +112,16 @@ interface Window {
   addEventListener(type: "unload", listener: (this: Window, ev: Event) => any, options?: boolean | AddEventListenerOptions): void
 }
 
-interface HTMLElement {
+interface Element {
   /** 
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Element/innerHTML) 
    * @deprecated
    * @migrate {@link HTMLElement.html}
    */
   innerHTML: string;
+}
 
+interface HTMLElement {
   /** 
    * [MDN Reference](https://developer.mozilla.org/docs/Web/API/HTMLElement/innerText) 
    * @deprecated

@@ -241,47 +241,6 @@ describe('emitter', () => {
   });
 });
 
-describe('features.*', () => {
-  beforeEach(() => {
-    // Spy on all enable and disable methods
-    for (const feature of Object.values(features)) {
-      if (feature && typeof feature.enable === "function") {
-        jest.spyOn(feature, "enable");
-      }
-      if (feature && typeof feature.disable === "function") {
-        jest.spyOn(feature, "disable");
-      }
-    }
-  });
-
-  afterEach(() => {
-    // Restore the original implementations after each test
-    jest.restoreAllMocks();
-  });
-
-  it('should call enable on all features', () => {
-    features.enableAll();
-
-    for (const feature of Object.values(features)) {
-      if (feature && typeof feature.enable === "function") {
-        feature.enable();
-        expect(feature.enable).toHaveBeenCalled();
-      }
-    }
-  });
-
-  it('should call disable on all features', () => {
-    features.disableAll();
-
-    for (const feature of Object.values(features)) {
-      if (feature && typeof feature.disable === "function") {
-        feature.disable();
-        expect(feature.disable).toHaveBeenCalled();
-      }
-    }
-  });
-});
-
 describe("createEventListener", () => {
   beforeAll(() => {
     window.alert = jest.fn();

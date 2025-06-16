@@ -47,44 +47,6 @@ interface Document {
   ): void;
 
   /**
-   * Selects a element from the document based on the css selector provided
-   * @optidom
-   * @param selector A css style selector used to find the element on the document
-   * @example
-   * const el = document.$("#target");
-   * 
-   * el.txt("New Text");
-   * if (el.hasText("New")) {
-   *   console.log("New!");
-   *   el.addClass("new");
-   * }
-   */
-  $<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
-  $<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
-  $<K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null;
-  /** @deprecated */
-  $<K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null;
-  $<E extends Element = Element>(selectors: string): E | null;
-
-  /**
-   * Selects all elements from the document that match the css selector provided
-   * @optidom
-   * @param selector The css selector used to find the elements
-   * @example
-   * const els = document.$$("a")
-   * 
-   * els.forEach((el) => {
-   *   el.addClass("link")
-   * });
-   */
-  $$<K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>;
-  $$<K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>;
-  $$<K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>;
-  /** @deprecated */
-  $$<K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>;
-  $$<E extends Element = Element>(selectors: string): NodeListOf<E>;
-
-  /**
    * Calls the callback when the document is ready and all of the content is loaded
    * @optidom
    * @param callback The function to call when the document is ready
@@ -220,10 +182,12 @@ interface Node {
    * 
    * el.$(".hidden").removeClass("hidden");
    */
-  $<K extends keyof HTMLElementTagNameMap>(selector: K): HTMLElementTagNameMap[K] | null;
-  $<K extends keyof SVGElementTagNameMap>(selector: K): SVGElementTagNameMap[K] | null;
-  $<K extends keyof MathMLElementTagNameMap>(selector: K): MathMLElementTagNameMap[K] | null;
-  $<E extends Element = Element>(selector: string): E | null;
+  $<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null;
+  $<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null;
+  $<K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null;
+  /** @deprecated */
+  $<K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null;
+  $<E extends Element = HTMLElement>(selectors: string): E | null;
 
   /**
    * Finds children based on the selector specified
@@ -235,10 +199,12 @@ interface Node {
    * 
    * el.$$(".hidden", true).removeClass("hidden");
    */
-  $$<K extends keyof HTMLElementTagNameMap>(selector: K): NodeListOf<HTMLElementTagNameMap[K]>;
-  $$<K extends keyof SVGElementTagNameMap>(selector: K): NodeListOf<SVGElementTagNameMap[K]>;
-  $$<K extends keyof MathMLElementTagNameMap>(selector: K): NodeListOf<MathMLElementTagNameMap[K]>;
-  $$<E extends Element = Element>(selector: string): NodeListOf<E>;
+  $$<K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>;
+  $$<K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>;
+  $$<K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>;
+  /** @deprecated */
+  $$<K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>;
+  $$<E extends Element = HTMLElement>(selectors: string): NodeListOf<E>;
 }
 
 interface EventTarget {
@@ -604,7 +570,7 @@ interface NodeList {
   addEventListener<T extends EventTarget>(
     this: Iterable<T>,
     type: keyof EventMapOf<T>,
-    listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any, 
+    listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any,
     options?: boolean | AddEventListenerOptions
   ): void
 
@@ -662,8 +628,8 @@ interface HTMLCollection {
    */
   addEventListener<T extends EventTarget, K extends keyof EventMapOf<T>>(
     this: Iterable<T>,
-    type: K, 
-    listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any, 
+    type: K,
+    listener: (this: T, e: EventMapOf<T>[keyof EventMapOf<T>]) => any,
     options?: boolean | AddEventListenerOptions
   ): void
 
@@ -864,6 +830,40 @@ interface JSON {
   parseFile<R = any, T = R>(file: string, receiver?: (content: T) => R): Promise<R>;
 }
 
+//! Possible Fns :
+
+/**
+ * Selects a element from the document based on the css selector provided
+ * @optidom
+ * @param selector A css style selector used to find the element on the document
+ * @example
+ * const el = $("#target");
+ * 
+ * el.txt("New Text");
+ * if (el.hasText("New")) {
+ *   console.log("New!");
+ *   el.addClass("new");
+ * }
+ */
+declare var $: Document["$"] | undefined;
+
+/**
+ * Selects all elements from the document that match the css selector provided
+ * @optidom
+ * @param selector The css selector used to find the elements
+ * @example
+ * const els = $$("a")
+ * 
+ * els.forEach((el) => {
+ *   el.addClass("link")
+ * });
+ */
+
+declare var $$: Document["$$"] | undefined;
+
+//! End Possible Fns
+
+
 /** 
  * Creates an iife (Immediately invoked function expression) that triggers on run 
  * @optidom
@@ -883,7 +883,7 @@ declare function f(iife: () => void): void;
  * });
  */
 declare function createEventListener<T extends ((...args: any[]) => any)[]>(
-  triggers: [...T], 
+  triggers: [...T],
   callback: (...results: CallbackResult<T>) => void
 ): void;
 
@@ -952,7 +952,7 @@ declare function Colorize(strings: TemplateStringsArray, ...values: any[]): stri
  * The global event emitter instance
  * @optidom
  */
-declare var emitter: EventEmitter;
+declare var emitter: EventEmitter<{}>;
 
 declare var features: {
   buttonHrefs: OptiDOMFeature;
@@ -967,9 +967,8 @@ declare var ColorizedSyntaxError: ErrorType<typeof OptiDOM.ColorizedSyntaxError>
 declare var CustomError: ErrorType<typeof OptiDOM.CustomError>;
 
 declare var Optidom: typeof OptidomT;
-declare var Cookie: typeof OptiDOM.Cookie;
-declare var LocalStorage: typeof OptiDOM.LocalStorage;
-declare var SessionStorage: typeof OptiDOM.SessionStorage;
-declare var Time: typeof OptiDOM.Time;
-declare var Sequence: typeof OptiDOM.Sequence;
-declare var ShortcutEvent: typeof OptiDOM.ShortcutEvent;
+declare var Cookie: CookieConstructor;
+declare var LocalStorage: OptiDOMStorageConstructor;
+declare var SessionStorage: OptiDOMStorageConstructor;
+declare var Time: TimeConstructor;
+declare var Sequence: SequenceConstructor;

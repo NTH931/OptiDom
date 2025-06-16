@@ -13,7 +13,23 @@ type KeyboardEventKey = ModifierKey | RegularKey;
 //! Utility Types
 type StringRecord<T> = Record<string, T>;
 
+type APIRule = "Disabled" | "Check" | "Enabled"
+
 type placeholder = any;
+
+type GetterKeys<T> = {
+  [K in keyof T]-?: T[K] extends Function ? never : (
+    { -readonly [P in K]: T[K] } extends { [P in K]: T[K] } ? K : never
+  )
+}[keyof T];
+
+type SetterKeys<T> = {
+  [K in keyof T]-?: T[K] extends Function ? never : (
+    { -readonly [P in K]: T[P] } extends { [P in K]: T[P] } ? K : never
+  )
+}[keyof T];
+
+type AccessorKeys<T> = GetterKeys<T> | SetterKeys<T>;
 
 type Class<T> = abstract new (...args: any[]) => T;
 
@@ -196,6 +212,25 @@ type EventMapOf<T> =
 
 
 //! Interfaces
+
+interface OptiDOMConfig {
+  globalSelector?: boolean,
+  apiRules?: APIRule | {
+    storage?: APIRule,
+    geolocation?: APIRule,
+    history?: APIRule,
+    navigator?: APIRule,
+    [api: string]: APIRule
+  },
+  disableDeprecated?: "JSBase" | "OptiDOMReplaced" | "All",
+  allowDOMWrite?: boolean,
+  denyBrowsers?: boolean,
+  htmlOnly?: boolean,
+  useFetchCORS?: boolean,
+  [key: string]: OptiDOMConfig[typeof key]
+}
+
+
 /**
  * @optidom
  * @deprecated
@@ -208,15 +243,26 @@ interface HTMLElementCascade {
   [key: string]: any
 }
 
-interface EventEmitter {
-  // Register a listener for a specific event, inferred from event name
-  on<T extends string, P extends any[]>(event: T, callback: (...args: P) => void): void;
+interface EventEmitter<M extends Record<string, (...args: any[]) => void>> {
+  // Register a listener, narrow the event map by extending it
+  on<T extends string, P extends (...args: any[]) => void>(
+    event: T,
+    callback: P
+  ): asserts this is EventEmitter<M & Record<T, P>>;
 
-  // Remove a listener for a specific event
-  off<T extends string, P extends any[]>(event: T, callback: (...args: P) => void): void;
+  // Remove a listener for a known event
+  off<T extends keyof M>(
+    event: T
+  ): asserts this is EventEmitter<Omit<M, T>>;
 
-  // Emit an event with specific parameters
-  emit<T extends string, P extends any[]>(event: T, ...params: P): void;
+  // Remove a listener for unknown event
+  off<T extends string>(event: T): void;
+
+  // Emit a known event
+  emit<T extends keyof M>(event: T, ...params: Parameters<M[T]>): void;
+
+  // Emit an unknown event (fallback)
+  emit<T extends string>(event: T, ...params: any[]): void;
 }
 
 /* New Classes */

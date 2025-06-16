@@ -1,81 +1,71 @@
-declare class Cookie {
-  constructor(name: string, valueIfNotExist?: string | null, days?: number, path?: string)
+interface CookieConstructor {
+  new(name: string, valueIfNotExist?: string | null, days?: number, path?: string): Cookie;
+  set<T = string>(name: string, value: T, days?: number, path?: string): void;
+  get<T = string>(name: string): T | null;
+  delete(name: string, path?: string): void;
+}
 
-  static set<T = string>(name: string, value: T, days?: number, path?: string): void;
-  static get<T = string>(name: string): T | null;
-  static delete(name: string, path?: string): void;
-
+interface  Cookie {
   update(value: string, days?: number, path?: string): void;
   delete(): void;
-
   getValue(): string | null;
   getName(): string;
   getExpiry(): number;
   getPath(): string;
 }
 
-declare class LocalStorage<T> {
-  constructor(name: string, valueIfNotExist?: T | null)
+interface OptiDOMStorageConstructor {
+  new<T>(name: string, valueIfNotExist?: T | null): OptiDOMStorage<T>
 
-  static set<T = string>(key: string, value: T): void;
-  static get<T = string>(key: string): T | null;
-  static remove(key: string): void;
-  static clear(): void;
+  set<T = string>(key: string, value: T): void;
+  get<T = string>(key: string): T | null;
+  remove(key: string): void;
+  clear(): void;
+}
 
+interface OptiDOMStorage<T> {
   update(value: T): void
   delete(): void;
   getValue(): T | null;
   getName(): string;
 }
 
-declare class SessionStorage<T> {
-  constructor(name: string, valueIfNotExist?: T | null);
+interface TimeConstructor {
+  new();
+  new(hours: Date);
+  new(hours: number, minutes: number, seconds?: number, milliseconds?: number);
+  new(hours?: number | Date, minutes?: number, seconds?: number, milliseconds?: number);
 
-  static set<T = string>(key: string, value: T): void;
-  static get<T = string>(key: string): T | null;
-  static remove(key: string): void;
-  static clear(): void;
+  of(date: Date): Date;
+  at(hours: number, minutes: number, seconds?: number, milliseconds?: number): number;
+  now(): number;
 
-  update(value: T): void;
-  delete(): void;
-  getValue(): T | null;
-  getName(): string;
+  fromDate(date: Date): Time;
+  fromMilliseconds(ms: number): Time;
+  fromString(timeString: string): Time;
+  fromISOString(isoString: string): Time;
+
+  equals(first: Time, other: Time): boolean;
 }
 
-declare class Time {
-  constructor();
-  constructor(hours: Date);
-  constructor(hours: number, minutes: number, seconds?: number, milliseconds?: number);
-  constructor(hours?: number | Date, minutes?: number, seconds?: number, milliseconds?: number);
-
-  static of(date: Date): Date;
-
-  // Getters
+interface Time {
   getHours(): number;
   getMinutes(): number;
   getSeconds(): number;
   getMilliseconds(): number;
+  getTime(): number;
 
-  // Setters
   setHours(hours: number): void;
   setMinutes(minutes: number): void;
   setSeconds(seconds: number): void;
   setMilliseconds(milliseconds: number): void;
 
-  getTime(): number;
-
-  static at(hours: number, minutes: number, seconds?: number, milliseconds?: number): number;
-
   sync(): Time;
-
-  static now(): number;
 
   toString(): string;
   toISOString(): string;
   toJSON(): string;
   toDate(years: number, months: number, days: number): Date;
-
-  static fromDate(date: Date): Time;
 
   addMilliseconds(ms: number): Time;
   subtractMilliseconds(ms: number): Time;
@@ -83,37 +73,28 @@ declare class Time {
   addMinutes(minutes: number): Time;
   addHours(hours: number): Time;
 
-  static fromMilliseconds(ms: number): Time;
-
-  // Parsing
-  static fromString(timeString: string): Time;
-  static fromISOString(isoString: string): Time;
-
   // Comparison
   compare(other: Time): number;
   isBefore(other: Time): boolean;
   isAfter(other: Time): boolean;
   equals(other: Time): boolean;
-  static equals(first: Time, other: Time): boolean;
 }
 
-declare class Sequence {
-  private finalResult: any;
+interface SequenceConstructor {
+  of(...functions: (((...args: any[]) => any) | Sequence)[]): Sequence;
+  chain(...functions: ((input: any) => any)[]): Sequence;
+  parallel(...functions: (() => any)[]): Sequence;
+  race(...functions: (() => any)[]): Sequence;
+  retry(retries: number, task: () => Promise<any>, delay?: number): Sequence;
+}
 
-  private constructor();
-
+interface Sequence {
   execute(...args: any[]): Promise<any>;
 
   result(): any;
   result(callback: (result: unknown) => any): any;
   result(callback?: (result: unknown) => any): typeof this.finalResult;
   error(callback: (error: any) => any): this;
-
-  static of(...functions: (((...args: any[]) => any) | Sequence)[]): Sequence;
-  static chain(...functions: ((input: any) => any)[]): Sequence;
-  static parallel(...functions: (() => any)[]): Sequence;
-  static race(...functions: (() => any)[]): Sequence;
-  static retry(retries: number, task: () => Promise<any>, delay?: number): Sequence;
 
   add(...functions: ((...args: any[]) => any)[]): this;
 }
@@ -126,9 +107,7 @@ declare class ShortcutEvent extends KeyboardEvent {
   )
 }
 
-export declare class TypedMap<R extends Record<string | number, any> = {}> {
-  private _map: R;
-
+interface TypedMap<R extends Record<string | number, any> = {}> {
   readonly size: number;
 
   set<K extends string, F>(
@@ -153,23 +132,4 @@ export declare class TypedMap<R extends Record<string | number, any> = {}> {
   readonly [Symbol.toStringTag]: string;
 
   forEach(callback: <K extends keyof R>(value: R[K], key: K) => void): void;
-}
-
-declare class optidom {
-  register<T, K extends PropertyKey>(
-    clazz: new (...args: any[]) => T,
-    methodName: K,
-    method: new (...args: any[]) => T,
-    prototype?: false,
-    overwrite?: boolean
-  ): void;
-
-  register<T, K extends PropertyKey>(
-    clazz: (object & Partial<{ prototype: any }>) | (new (...args: any[]) => T),
-    methodName: K,
-    method: (this: T, ...args: any[]) => any,
-    prototype?: boolean,
-    overwrite?: boolean
-  ): optidom<M & { [P in K]: (this: T, ...args: any[]) => any }>;
-  debug(): void;
 }

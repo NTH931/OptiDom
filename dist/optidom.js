@@ -557,6 +557,42 @@ var OptiDOM;
         }
     }
     OptiDOM.TypedMap = TypedMap;
+    let Crafty;
+    (function (Crafty) {
+        class Element {
+            constructor(tag, props, children) {
+                this.tag = tag;
+                this.props = props !== null && props !== void 0 ? props : {};
+                this.children = children !== null && children !== void 0 ? children : [];
+            }
+            getProp(prop) {
+                return this.props[prop];
+            }
+            setProp(prop, value) {
+                this.props[prop] = value;
+            }
+            getChildren() {
+                return this.children;
+            }
+            append(child) {
+                this.children = [...this.children, child];
+            }
+            prepend(child) {
+                this.children = [child, ...this.children];
+            }
+            remove(child) {
+                this.children = this.children.filter(c => c !== child);
+            }
+            render() {
+                // your render implementation here
+                throw new Error("Not implemented");
+            }
+        }
+        Crafty.Element = Element;
+        class Fragment extends Element {
+        }
+        Crafty.Fragment = Fragment;
+    })(Crafty = OptiDOM.Crafty || (OptiDOM.Crafty = {}));
 })(OptiDOM || (OptiDOM = {}));
 var OptiDOM;
 (function (OptiDOM) {
@@ -920,29 +956,26 @@ var OptiDOM;
         });
     }
     OptiDOM.createEventListener = createEventListener;
-    OptiDOM.emitter = new class {
+    class EventEmitter {
         constructor() {
             this.listeners = {};
         }
         on(event, callback) {
-            if (!this.listeners[event]) {
-                this.listeners[event] = [];
-            }
-            this.listeners[event].push(callback);
+            var _a;
+            const key = event;
+            ((_a = this.listeners)[key] || (_a[key] = [])).push(callback);
         }
-        off(event, callback) {
-            const listeners = this.listeners[event];
-            if (listeners) {
-                this.listeners[event] = listeners.filter(fn => fn !== callback);
-            }
+        off(event) {
+            delete this.listeners[event];
         }
         emit(event, ...params) {
-            const listeners = this.listeners[event];
-            if (listeners) {
-                listeners.forEach((callback) => callback(...params));
+            const callbacks = this.listeners[event];
+            if (callbacks) {
+                callbacks.forEach(cb => cb(...params));
             }
         }
-    };
+    }
+    OptiDOM.emitter = new EventEmitter();
     function generateID() {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%&*_-";
         let result = "";
@@ -1410,10 +1443,6 @@ var OptiDOM;
         document.addEventListener("unload", (e) => callback.call(document, e));
     }
     OptiDOM.leaving = leaving;
-    function elementCreatorDocument(superEl, attrs) {
-        return new OptiDOM.HTMLElementCreator(superEl, attrs);
-    }
-    OptiDOM.elementCreatorDocument = elementCreatorDocument;
     function bindShortcut(shortcut, callback) {
         document.addEventListener('keydown', (event) => {
             const keyboardEvent = event;
@@ -1580,11 +1609,21 @@ function toKebabCase(str) {
 function isGlobal(val) {
     return val === globalThis;
 }
+function typedEntries(obj) {
+    return Object.entries(obj);
+}
 var OptiDOM;
 (function (OptiDOM) {
+    class OptiDOMRemovedError extends Error {
+        constructor(message) {
+            super(message);
+            this.name = "OptiDOMRemovedError";
+        }
+    }
     class optidom {
         constructor() {
             this._registry = {};
+            this._setup = false;
         }
         register(clazz, methodName, method, prototype = true, options = {}) {
             const isGlobalTarget = isGlobal(clazz);
@@ -1622,15 +1661,99 @@ var OptiDOM;
             }
             console.groupEnd();
         }
-        es(version) {
-            switch (version) {
+        configure(config) {
+            if (!this._setup) {
+                this._setup = true;
+                if (config.globalSelector) {
+                    if (typeof globalThis.$ === "undefined")
+                        globalThis.$ = OptiDOM.$;
+                    if (typeof globalThis.$$ === "undefined")
+                        globalThis.$$ = OptiDOM.$$;
+                }
+                else {
+                    if (globalThis.$ === OptiDOM.$)
+                        delete globalThis.$;
+                    if (globalThis.$$ === OptiDOM.$$)
+                        delete globalThis.$$;
+                }
+                if (config.allowDOMWrite === false) {
+                    document.write = () => {
+                        throw new OptiDOMRemovedError("Function document.write was removed");
+                    };
+                    document.writeln = () => {
+                        throw new OptiDOMRemovedError("Function document.write was removed");
+                    };
+                }
+                if (config.disableDeprecated) {
+                    switch (config.disableDeprecated) {
+                        case "All":
+                            break;
+                        case "JSBase":
+                            break;
+                        case "OptiDOMReplaced":
+                            break;
+                    }
+                }
+                if (config.htmlOnly) {
+                    const originalCreateElement = document.createElement.bind(document);
+                    const originalQuerySelector = document.querySelector.bind(document);
+                    // Override createElement to block SVG, MathML, XML elements
+                    document.createElement = function (tagName, options) {
+                        const lowerTag = tagName.toLowerCase();
+                        // Block SVG/MathML tags — adjust list as needed
+                        const blockedTags = [
+                            "svg", "circle", "rect", "path", "math", "maction", "mfrac", "msqrt" // etc
+                        ];
+                        if (blockedTags.includes(lowerTag)) {
+                            throw new Error(`Creation of <${tagName}> is blocked by htmlOnly enforcement.`);
+                        }
+                        return originalCreateElement(tagName, options);
+                    };
+                    // Optionally override querySelector to check for SVG/MathML too
+                    document.querySelector = function (selector) {
+                        // Simple example: disallow selectors that match SVG or MathML tags
+                        if (/^(svg|circle|rect|path|math|maction|mfrac|msqrt)/i.test(selector.trim())) {
+                            throw new Error(`Querying for SVG/MathML elements is blocked by htmlOnly enforcement.`);
+                        }
+                        return originalQuerySelector(selector);
+                    };
+                    const originalCreateElementNS = document.createElementNS.bind(document);
+                    document.createElementNS = (function (namespaceURI, qualifiedName, options) {
+                        if (namespaceURI === "http://www.w3.org/2000/svg" || namespaceURI === "http://www.w3.org/1998/Math/MathML") {
+                            throw new Error(`Creation of namespaced element ${qualifiedName} in ${namespaceURI} is blocked by htmlOnly enforcement.`);
+                        }
+                        return originalCreateElementNS(namespaceURI, qualifiedName, options);
+                    });
+                }
+                if (config.apiRules) {
+                    if (typeof config.apiRules === "string") {
+                    }
+                    else {
+                        switch (config.apiRules) {
+                        }
+                    }
+                }
             }
-        }
-        flags(...flag) {
-        }
-        globalQs() {
+            else
+                console.error("[OptiDOM]: OptiDOM settings are already configured");
+            return config;
         }
         strict() {
+            if (!this._setup) {
+                this._setup = true;
+                return this.configure({
+                    version: "ESNext",
+                    apiRules: "Check",
+                    allowDOMWrite: false,
+                    disableDeprecated: "All",
+                    htmlOnly: true,
+                    useFetchCORS: true
+                });
+            }
+            else {
+                console.error("[OptiDOM]: OptiDOM has already been configured.");
+                return;
+            }
         }
     }
     OptiDOM.optidom = optidom;
@@ -1657,12 +1780,9 @@ const OptidomT = new OptiDOM.optidom()
     .register(globalThis, "ColorizedSyntaxError", OptiDOM.ColorizedSyntaxError, false)
     .register(Document, "ready", OptiDOM.ready)
     /*! Not Working */ .register(Document, "leaving", OptiDOM.leaving)
-    /*! Deprecated */ .register(Document, "elementCreator", OptiDOM.elementCreatorDocument)
     .register(Document, "bindShortcut", OptiDOM.bindShortcut)
     .register(Document, "css", OptiDOM.documentCss)
     .register(Document, "createElementTree", OptiDOM.createElementTree)
-    .register(Document, "$", OptiDOM.$)
-    .register(Document, "$$", OptiDOM.$$)
     .register(Date, "at", OptiDOM.atDate)
     .register(Date, "fromTime", OptiDOM.fromTime)
     .register(NodeList, "addEventListener", OptiDOM.addEventListenerEnum)

@@ -553,7 +553,7 @@ export class HTMLDefaultElement extends HTMLOptionElement {
     throw new AccessError("Cannot change the hidden property of a HTMLDefaultElement.");
   }
 
-  get hidden(): boolean {
+  get hidden(): true {
     return true;
   }
 }
@@ -639,6 +639,87 @@ export class TypedMap<R extends Record<string | number, any> = {}> {
       const val = this._map[key];
       callback(val, key as keyof R);
     }
+  }
+}
+
+export namespace Crafty {
+  export interface Element<
+    T extends HTMLTag,
+    P extends Crafty.Props<T> = Props<T>,
+    C extends readonly Crafty.Child[] = readonly []
+  > {
+    getProp<K extends keyof P>(prop: K): P[K];
+    setProp<K extends keyof P>(prop: K, value: P[K]): void;
+    getChildren(): C;
+    append(child: Crafty.Child): void;
+    prepend(child: Crafty.Child): void;
+    remove(child: Crafty.Child): void;
+    insert?(child: Crafty.Child, index: number): void;
+  }
+
+  export type Props<T extends HTMLTag> = Partial<{
+    tag: T,
+    class: string | string[],
+    text: string,
+    id: string,
+    name: string,
+    [key: string]: unknown
+    } & Pick<HTMLElementOf<T>, AccessorKeys<HTMLElementOf<T>>>
+  >;
+
+  export type Child = Crafty.Element<any, any, any> | Crafty.Fragment<any, any, any>;
+
+  export class Element<
+    T extends HTMLTag,
+    P extends Crafty.Props<T> = Props<T>,
+    C extends readonly Crafty.Child[] = readonly []
+  > {  // <- implements the interface
+    public tag: T;
+    public props: P;
+    public children: C;
+
+    constructor(tag: T, props?: P, children?: C) {
+      this.tag = tag;
+      this.props = props ?? ({} as P);
+      this.children = children ?? [] as unknown as C;
+    }
+
+    getProp<K extends keyof P>(prop: K): P[K] {
+      return this.props[prop];
+    }
+
+    setProp<K extends keyof P>(prop: K, value: P[K]): void {
+      this.props[prop] = value;
+    }
+
+    getChildren(): C {
+      return this.children;
+    }
+
+    append(child: Crafty.Child): void {
+      this.children = [...this.children, child] as unknown as C;
+    }
+
+    prepend(child: Crafty.Child): void {
+      this.children = [child, ...this.children] as unknown as C;
+    }
+
+    remove(child: Crafty.Child): void {
+      this.children = this.children.filter(c => c !== child) as unknown as C;
+    }
+
+    render(): HTMLElementOf<T> {
+      // your render implementation here
+      throw new Error("Not implemented");
+    }
+  }
+
+  export class Fragment<
+    T extends HTMLTag,
+    P extends Props<T> = Props<T>,
+    C extends readonly Child[] = readonly []
+  > extends Element<T, P, C> {
+    // can override or extend render() etc.
   }
 }
 

@@ -8,10 +8,6 @@ export function leaving (callback: (this: Document, ev: Event) => any): void {
   document.addEventListener("unload", (e) => callback.call(document, e));
 }
 
-export function elementCreatorDocument (superEl: keyof HTMLElementTagNameMap, attrs: HTMLAttrs) {
-  return new HTMLElementCreator(superEl, attrs);
-}
-
 export function bindShortcut (
   shortcut: Shortcut,
   callback: (event: ShortcutEvent) => void
